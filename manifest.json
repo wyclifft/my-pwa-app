@@ -1,11 +1,12 @@
 {
   "name": "Men’s Fellowship Management System",
   "short_name": "MCK Men",
-  "start_url": "/",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#007bff",
   "orientation": "portrait",
+  "scope": "./",
   "icons": [
     {
       "src": "icons/icon-192.png",

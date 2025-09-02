@@ -4,467 +4,177 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Men’s Fellowship Management System</title>
-            <link href="css/style.css" rel="stylesheet">
-            <link rel="manifest" href="manifest.json">
-            <meta name="theme-color" content="#007bff">
 
-             <style>
-                #installBtn {
-                  display: none;
-                  position: fixed;
-                  bottom: 20px;
-                  right: 20px;
-                  padding: 12px 18px;
-                  background: #007bff;
-                  color: white;
-                  border: none;
-                  border-radius: 12px;
-                  cursor: pointer;
-                  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-                  font-size: 16px;
-                  z-index: 1000;
-                }
+    <!-- CSS -->
+    <link href="css/style.css" rel="stylesheet">
 
-                #installBtn:hover {
-                  background: #0056b3;
-                }
-              </style>    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#007bff">
+
+    <style>
+        #installBtn {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 18px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            font-size: 16px;
+            z-index: 1000;
+        }
+        #installBtn:hover { background: #0056b3; }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>⛪ Men’s Fellowship Management System</h1>
-            
-                </div>
-
-        <div class="nav-tabs">
-            <button class="nav-tab active" onclick="showTab('dashboard')">📊 Dashboard</button>
-            <button class="nav-tab" onclick="showTab('groups')">👥 Groups</button>
-            <button class="nav-tab" onclick="showTab('attendance')">📋 Attendance</button>
-            <button class="nav-tab" onclick="showTab('announcements')">📢 Announcements</button>
-            <button class="nav-tab" onclick="showTab('events')">📅 Events</button>
-            <button class="nav-tab" onclick="showTab('contributions')">💰 Contributions</button>
-            
-        </div>
-
-        <!-- Dashboard Tab -->
-        <div id="dashboard" class="tab-content active">
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-number" id="totalGroups">0</div>
-                    <div class="stat-label">Total Groups</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="totalMembers">0</div>
-                    <div class="stat-label">Total Members</div>
-                </div>
-                <div class="stat-card">
-                      <div class="stat-number" id="totalContributions">0</div>
-                      <div class="stat-label">Total Contributions (KSH)</div>
-                    </div>
-
-                <div class="stat-card">
-                    <div class="stat-number" id="upcomingEvents">0</div>
-                    <div class="stat-label">Upcoming Events</div>
-                </div>
-               
-            </div>
-
-            <div class="dashboard-grid" id="dashboardGroups"></div>
-        </div>
-
-        <!-- Groups Tab -->
-        <div id="groups" class="tab-content">
-            <div class="section-header">
-                <h2 class="section-title">Church Groups</h2>
-                <button class="btn btn-primary" onclick="showAddGroupModal()">➕ Add Group</button>
-            </div>
-            <div id="groupsList" class="dashboard-grid"></div>
-            <div id="groupDetails" style="display: none;"></div>
-        </div>
-
-        <!-- Attendance Tab -->
-        <div id="attendance" class="tab-content">
-            <div class="section-header">
-                <h2 class="section-title">Attendance Tracking</h2>
-                <button class="btn btn-primary" onclick="showAttendanceModal()">📝 Mark Attendance</button>
-            </div>
-            <div id="attendanceList" class="content-card"></div>
-        </div>
-
-        <!-- Announcements Tab -->
-        <div id="announcements" class="tab-content">
-            <div class="section-header">
-                <h2 class="section-title">Announcements</h2>
-                <button class="btn btn-primary" onclick="showAnnouncementModal()">📢 New Announcement</button>
-            </div>
-            <div id="announcementsList"></div>
-        </div>
-
-        <!-- Events Tab -->
-        <div id="events" class="tab-content">
-            <div class="section-header">
-                <h2 class="section-title">Events & Reminders</h2>
-                <button class="btn btn-primary" onclick="showEventModal()">📅 Add Event</button>
-            </div>
-            <div id="eventsList"></div>
-        </div>
-
-        <!-- Contributions Tab -->
-        <div id="contributions" class="tab-content">
-            <div class="section-header">
-                <h2 class="section-title">Contributions & Giving</h2>
-                <button class="btn btn-primary" onclick="showContributionModal()">💰 Record Contribution</button>
-            </div>
-            <div id="contributionsList" class="content-card"></div>
-        </div>
-
-        <!-- Birthdays Tab -->
-        <div id="birthdays" class="tab-content">
-            <div class="section-header">
-                <h2 class="section-title">Birthday Alerts</h2>
-                <button class="btn btn-primary" onclick="showBirthdayModal()">🎂 Add Birthday</button>
-            </div>
-            <div id="birthdaysList"></div>
-        </div>
+<div class="container">
+    <div class="header">
+        <h1>⛪ Men’s Fellowship Management System</h1>
     </div>
 
-    <!-- Add Group Modal -->
-    <div id="addGroupModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Add New Group</h3>
-                <button class="close-btn" onclick="closeModal('addGroupModal')">&times;</button>
-            </div>
-            <form id="addGroupForm">
-                <div class="form-group">
-                    <label class="form-label">Group Name</label>
-                    <input type="text" id="groupName" class="form-input" placeholder="e.g., Youth Fellowship" required>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Leader Name</label>
-                        <input type="text" id="leaderName" class="form-input" placeholder="Leader Name" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Leader Phone</label>
-                        <input type="tel" id="leaderPhone" class="form-input" placeholder="0712345678" required>
-                    </div>
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('addGroupModal')">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Create Group</button>
-                </div>
-            </form>
-        </div>
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs">
+        <button class="nav-tab active" onclick="showTab('dashboard')">📊 Dashboard</button>
+        <button class="nav-tab" onclick="showTab('groups')">👥 Groups</button>
+        <button class="nav-tab" onclick="showTab('attendance')">📋 Attendance</button>
+        <button class="nav-tab" onclick="showTab('announcements')">📢 Announcements</button>
+        <button class="nav-tab" onclick="showTab('events')">📅 Events</button>
+        <button class="nav-tab" onclick="showTab('contributions')">💰 Contributions</button>
     </div>
 
-    <!-- Add Member Modal -->
-    <div id="addMemberModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Add New Member</h3>
-                <button class="close-btn" onclick="closeModal('addMemberModal')">&times;</button>
+    <!-- Dashboard -->
+    <div id="dashboard" class="tab-content active">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="totalGroups">0</div>
+                <div class="stat-label">Total Groups</div>
             </div>
-            <form id="addMemberForm">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Member Name</label>
-                        <input type="text" id="memberName" class="form-input" placeholder="Member Name" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Phone Number</label>
-                        <input type="tel" id="memberPhone" class="form-input" placeholder="0712345678" required>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Birthday (Optional)</label>
-                        <input type="date" id="memberBirthday" class="form-input">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Group</label>
-                        <select id="memberGroup" class="form-select" required></select>
-                    </div>
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('addMemberModal')">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Add Member</button>
-                </div>
-            </form>
+            <div class="stat-card">
+                <div class="stat-number" id="totalMembers">0</div>
+                <div class="stat-label">Total Members</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalContributions">0</div>
+                <div class="stat-label">Total Contributions (KSH)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="upcomingEvents">0</div>
+                <div class="stat-label">Upcoming Events</div>
+            </div>
         </div>
+        <div class="dashboard-grid" id="dashboardGroups"></div>
     </div>
 
-    <!-- Edit Member Modal -->
-    <div id="editMemberModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Edit Member</h3>
-                <button class="close-btn" onclick="closeModal('editMemberModal')">&times;</button>
-            </div>
-            <form id="editMemberForm">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Member Name</label>
-                        <input type="text" id="editMemberName" class="form-input" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Phone Number</label>
-                        <input type="tel" id="editMemberPhone" class="form-input" required>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Birthday (Optional)</label>
-                    <input type="date" id="editMemberBirthday" class="form-input">
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('editMemberModal')">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
-                </div>
-            </form>
+    <!-- Groups -->
+    <div id="groups" class="tab-content">
+        <div class="section-header">
+            <h2 class="section-title">Church Groups</h2>
+            <button class="btn btn-primary" onclick="showAddGroupModal()">➕ Add Group</button>
         </div>
+        <div id="groupsList" class="dashboard-grid"></div>
+        <div id="groupDetails" style="display: none;"></div>
     </div>
 
-    <!-- Attendance Modal -->
-    <div id="attendanceModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Mark Attendance</h3>
-                <button class="close-btn" onclick="closeModal('attendanceModal')">&times;</button>
-            </div>
-            <form id="attendanceForm">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Group</label>
-                        <select id="attendanceGroup" class="form-select" required onchange="loadAttendanceMembers()"></select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Event/Meeting</label>
-                        <input type="text" id="attendanceEvent" class="form-input" placeholder="Sunday Service, Prayer Meeting, etc." required>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Date</label>
-                    <input type="date" id="attendanceDate" class="form-input" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Select Attendees</label>
-                    <div id="attendanceMembers" class="attendance-grid"></div>
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('attendanceModal')">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Attendance</button>
-                </div>
-            </form>
+    <!-- Attendance -->
+    <div id="attendance" class="tab-content">
+        <div class="section-header">
+            <h2 class="section-title">Attendance Tracking</h2>
+            <button class="btn btn-primary" onclick="showAttendanceModal()">📝 Mark Attendance</button>
         </div>
+        <div id="attendanceList" class="content-card"></div>
     </div>
 
-    <!-- Announcement Modal -->
-    <div id="announcementModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">New Announcement</h3>
-                <button class="close-btn" onclick="closeModal('announcementModal')">&times;</button>
-            </div>
-            <form id="announcementForm">
-                <div class="form-group">
-                    <label class="form-label">Title</label>
-                    <input type="text" id="announcementTitle" class="form-input" placeholder="Announcement Title" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Message</label>
-                    <textarea id="announcementMessage" class="form-textarea" placeholder="Your announcement message..." required></textarea>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Send To</label>
-                    <select id="announcementTarget" class="form-select" required>
-                        <option value="">Select target group</option>
-                        <option value="all">All Members</option>
-                    </select>
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('announcementModal')">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Send Announcement</button>
-                </div>
-            </form>
+    <!-- Announcements -->
+    <div id="announcements" class="tab-content">
+        <div class="section-header">
+            <h2 class="section-title">Announcements</h2>
+            <button class="btn btn-primary" onclick="showAnnouncementModal()">📢 New Announcement</button>
         </div>
+        <div id="announcementsList"></div>
     </div>
 
-    <!-- Event Modal -->
-    <div id="eventModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Add Event</h3>
-                <button class="close-btn" onclick="closeModal('eventModal')">&times;</button>
-            </div>
-            <form id="eventForm">
-                <div class="form-group">
-                    <label class="form-label">Event Title</label>
-                    <input type="text" id="eventTitle" class="form-input" placeholder="Sunday Service, Prayer Meeting, etc." required>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Date</label>
-                        <input type="date" id="eventDate" class="form-input" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Time</label>
-                        <input type="time" id="eventTime" class="form-input" required>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Description</label>
-                    <textarea id="eventDescription" class="form-textarea" placeholder="Event description..."></textarea>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Send Reminder To</label>
-                    <select id="eventTarget" class="form-select" required>
-                        <option value="">Select target group</option>
-                        <option value="all">All Members</option>
-                    </select>
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('eventModal')">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Create Event</button>
-                </div>
-            </form>
+    <!-- Events -->
+    <div id="events" class="tab-content">
+        <div class="section-header">
+            <h2 class="section-title">Events & Reminders</h2>
+            <button class="btn btn-primary" onclick="showEventModal()">📅 Add Event</button>
         </div>
+        <div id="eventsList"></div>
     </div>
 
-    <!-- Contribution Modal -->
-    <div id="contributionModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Record Contribution</h3>
-                <button class="close-btn" onclick="closeModal('contributionModal')">&times;</button>
-            </div>
-            <form id="contributionForm">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Member</label>
-                        <select id="contributionMember" class="form-select" required></select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Amount (KSH)</label>
-                        <input type="number" id="contributionAmount" class="form-input" placeholder="1000" required min="1">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Type</label>
-                        <select id="contributionType" class="form-select" required>
-                            <option value="">Select type</option>
-                            <option value="tithe">Tithe</option>
-                            <option value="offering">Offering</option>
-                            <option value="pledge">Pledge</option>
-                            <option value="donation">Donation</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Date</label>
-                        <input type="date" id="contributionDate" class="form-input" required>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Notes (Optional)</label>
-                    <textarea id="contributionNotes" class="form-textarea" placeholder="Additional notes..."></textarea>
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('contributionModal')">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Record Contribution</button>
-                </div>
-            </form>
+    <!-- Contributions -->
+    <div id="contributions" class="tab-content">
+        <div class="section-header">
+            <h2 class="section-title">Contributions & Giving</h2>
+            <button class="btn btn-primary" onclick="showContributionModal()">💰 Record Contribution</button>
         </div>
+        <div id="contributionsList" class="content-card"></div>
     </div>
 
-    <!-- Birthday Modal -->
-    <div id="birthdayModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Add Birthday</h3>
-                <button class="close-btn" onclick="closeModal('birthdayModal')">&times;</button>
-            </div>
-            <form id="birthdayForm">
-                <div class="form-group">
-                    <label class="form-label">Member</label>
-                    <select id="birthdayMember" class="form-select" required></select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Birthday</label>
-                    <input type="date" id="birthdayDate" class="form-input" required>
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('birthdayModal')">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Add Birthday</button>
-                </div>
-            </form>
+    <!-- Birthdays -->
+    <div id="birthdays" class="tab-content">
+        <div class="section-header">
+            <h2 class="section-title">Birthday Alerts</h2>
+            <button class="btn btn-primary" onclick="showBirthdayModal()">🎂 Add Birthday</button>
         </div>
+        <div id="birthdaysList"></div>
     </div>
+</div>
 
-    <!-- Notification -->
-    <div id="notification" class="notification"></div>
+<!-- Install Button -->
 <button id="installBtn">📲 Install App</button>
 <button id="forceInstallBtn">Force Install (Test)</button>
 
-
- <script type="module" src="app.js"></script>
- <script>
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./service-worker.js")
-      .then((reg) => console.log("Service Worker registered!", reg))
-      .catch((err) => console.log("SW registration failed:", err));
-  });
-}
-</script>
-
+<!-- JavaScript -->
+<script type="module" src="./app.js"></script>
 <script>
-  let deferredPrompt;
-  const installBtn = document.getElementById("installBtn");
-
-  // Hide the button at first
-  installBtn.style.display = "none";
-
-  // Listen for the beforeinstallprompt event
-  window.addEventListener("beforeinstallprompt", (e) => {
-    e.preventDefault(); // stop Chrome from showing its mini-infobar
-    deferredPrompt = e;
-
-    // Show your button
-    installBtn.style.display = "block";
-
-    installBtn.addEventListener("click", async () => {
-      installBtn.style.display = "none"; // hide after click
-      deferredPrompt.prompt(); // show install prompt
-
-      const { outcome } = await deferredPrompt.userChoice;
-      console.log(`User response: ${outcome}`);
-      deferredPrompt = null;
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./service-worker.js')
+            .then(reg => console.log('Service Worker registered!', reg))
+            .catch(err => console.log('SW registration failed:', err));
     });
-  });
+}
 
-  // Optional: detect if already installed
-  window.addEventListener("appinstalled", () => {
-    console.log("PWA installed");
-    installBtn.style.display = "none";
-  });
+let deferredPrompt;
+const installBtn = document.getElementById('installBtn');
+installBtn.style.display = 'none';
 
-  const forceBtn = document.getElementById('forceInstallBtn');
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    installBtn.style.display = 'block';
 
-forceBtn.addEventListener('click', async () => {
-  if (deferredPrompt) {
-    // Show the normal install prompt
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    console.log(`User response: ${outcome}`);
-    deferredPrompt = null;
-  } else {
-    alert("Install prompt not ready yet. Interact with the page first.");
-  }
+    installBtn.addEventListener('click', async () => {
+        installBtn.style.display = 'none';
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`User response: ${outcome}`);
+        deferredPrompt = null;
+    });
 });
 
+window.addEventListener('appinstalled', () => {
+    console.log('PWA installed');
+    installBtn.style.display = 'none';
+});
+
+const forceBtn = document.getElementById('forceInstallBtn');
+forceBtn.addEventListener('click', async () => {
+    if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`User response: ${outcome}`);
+        deferredPrompt = null;
+    } else {
+        alert('Install prompt not ready yet. Interact with the page first.');
+    }
+});
 </script>
-
-
 </body>
 </html>
