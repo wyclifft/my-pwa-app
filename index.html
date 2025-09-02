@@ -404,6 +404,8 @@
     <!-- Notification -->
     <div id="notification" class="notification"></div>
 <button id="installBtn">📲 Install App</button>
+<button id="forceInstallBtn">Force Install (Test)</button>
+
 
  <script type="module" src="app.js"></script>
  <script>
@@ -446,6 +448,21 @@ if ("serviceWorker" in navigator) {
     console.log("PWA installed");
     installBtn.style.display = "none";
   });
+
+  const forceBtn = document.getElementById('forceInstallBtn');
+
+forceBtn.addEventListener('click', async () => {
+  if (deferredPrompt) {
+    // Show the normal install prompt
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log(`User response: ${outcome}`);
+    deferredPrompt = null;
+  } else {
+    alert("Install prompt not ready yet. Interact with the page first.");
+  }
+});
+
 </script>
 
 
