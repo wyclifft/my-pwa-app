@@ -1,180 +1,229 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Men’s Fellowship Management System</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Men’s Fellowship Management System</title>
 
-    <!-- CSS -->
-    <link href="css/style.css" rel="stylesheet">
+  <!-- CSS -->
+  <link href="css/style.css" rel="stylesheet" />
 
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#007bff">
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json"/>
+  <meta name="theme-color" content="#007bff"/>
 
-    <style>
-        #installBtn {
-            display: none;
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            padding: 12px 18px;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            font-size: 16px;
-            z-index: 1000;
-        }
-        #installBtn:hover { background: #0056b3; }
-    </style>
+  <style>
+    #installBtn {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 12px 18px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      font-size: 16px;
+      z-index: 1000;
+    }
+    #installBtn:hover { background: #0056b3; }
+  </style>
 </head>
 <body>
 <div class="container">
-    <div class="header">
-        <h1>⛪ Men’s Fellowship Management System</h1>
-    </div>
+  <div class="header">
+    <h1>⛪ Men’s Fellowship Management System</h1>
+  </div>
 
-    <!-- Navigation Tabs -->
-    <div class="nav-tabs">
-        <button class="nav-tab active" onclick="showTab('dashboard')">📊 Dashboard</button>
-        <button class="nav-tab" onclick="showTab('groups')">👥 Groups</button>
-        <button class="nav-tab" onclick="showTab('attendance')">📋 Attendance</button>
-        <button class="nav-tab" onclick="showTab('announcements')">📢 Announcements</button>
-        <button class="nav-tab" onclick="showTab('events')">📅 Events</button>
-        <button class="nav-tab" onclick="showTab('contributions')">💰 Contributions</button>
-    </div>
+  <!-- Navigation Tabs -->
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showTab('dashboard')">📊 Dashboard</button>
+    <button class="nav-tab" onclick="showTab('groups')">👥 Groups</button>
+    <button class="nav-tab" onclick="showTab('attendance')">📋 Attendance</button>
+    <button class="nav-tab" onclick="showTab('announcements')">📢 Announcements</button>
+    <button class="nav-tab" onclick="showTab('events')">📅 Events</button>
+    <button class="nav-tab" onclick="showTab('contributions')">💰 Contributions</button>
+  </div>
 
-    <!-- Dashboard -->
-    <div id="dashboard" class="tab-content active">
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-number" id="totalGroups">0</div>
-                <div class="stat-label">Total Groups</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="totalMembers">0</div>
-                <div class="stat-label">Total Members</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="totalContributions">0</div>
-                <div class="stat-label">Total Contributions (KSH)</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="upcomingEvents">0</div>
-                <div class="stat-label">Upcoming Events</div>
-            </div>
+  <!-- Dashboard -->
+  <div id="dashboard" class="tab-content active">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-number" id="totalGroups">0</div>
+        <div class="stat-label">Total Groups</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="totalMembers">0</div>
+        <div class="stat-label">Total Members</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="totalContributions">0</div>
+        <div class="stat-label">Total Contributions (KSH)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="upcomingEvents">0</div>
+        <div class="stat-label">Upcoming Events</div>
+      </div>
+    </div>
+    <div class="dashboard-grid" id="dashboardGroups"></div>
+  </div>
+
+  <!-- Groups -->
+  <div id="groups" class="tab-content">
+    <div class="section-header">
+      <h2 class="section-title">Church Groups</h2>
+      <button class="btn btn-primary" onclick="showAddGroupModal()">➕ Add Group</button>
+    </div>
+    <div id="groupsList" class="dashboard-grid"></div>
+    <div id="groupDetails" style="display: none;"></div>
+  </div>
+
+  
+  <!-- Announcements -->
+  <div id="announcements" class="tab-content">
+    <div class="section-header">
+      <h2 class="section-title">Announcements</h2>
+      <button class="btn btn-primary" onclick="showAnnouncementModal()">📢 Add Announcement</button>
+    </div>
+    <div id="announcementsList" class="content-card"></div>
+  </div>
+
+  <!-- Announcement Modal -->
+  <div id="announcementModal" class="modal">
+    <div class="modal-content">
+      <h2>📢 New Announcement</h2>
+      <form id="announcementForm">
+        <div class="form-group">
+          <label for="announcementTitle">Title</label>
+          <input type="text" id="announcementTitle" name="announcementTitle" required />
         </div>
-        <div class="dashboard-grid" id="dashboardGroups"></div>
-    </div>
-
-    <!-- Groups -->
-    <div id="groups" class="tab-content">
-        <div class="section-header">
-            <h2 class="section-title">Church Groups</h2>
-            <button class="btn btn-primary" onclick="showAddGroupModal()">➕ Add Group</button>
+        <div class="form-group">
+          <label for="announcementMessage">Message</label>
+          <textarea id="announcementMessage" name="announcementMessage" required></textarea>
         </div>
-        <div id="groupsList" class="dashboard-grid"></div>
-        <div id="groupDetails" style="display: none;"></div>
-    </div>
-
-    <!-- Attendance -->
-    <div id="attendance" class="tab-content">
-        <div class="section-header">
-            <h2 class="section-title">Attendance Tracking</h2>
-            <button class="btn btn-primary" onclick="showAttendanceModal()">📝 Mark Attendance</button>
+        <div class="form-group">
+          <label for="announcementTarget">Target Group</label>
+          <select id="announcementTarget" name="announcementTarget" required>
+            <option value="all">All Members</option>
+            <option value="leaders">Leaders</option>
+            <option value="group">Specific Group</option>
+          </select>
         </div>
-        <div id="attendanceList" class="content-card"></div>
-    </div>
-
-    <!-- Announcements -->
-    <div id="announcements" class="tab-content">
-        <div class="section-header">
-            <h2 class="section-title">Announcements</h2>
-            <button class="btn btn-primary" onclick="showAnnouncementModal()">📢 New Announcement</button>
+        <div class="form-group">
+          <label for="announcementDate">Date</label>
+          <input type="date" id="announcementDate" name="announcementDate" required />
         </div>
-        <div id="announcementsList"></div>
+        <button type="submit" class="btn btn-primary">Save</button>
+        <button type="button" class="btn btn-secondary" onclick="closeModal('announcementModal')">Cancel</button>
+      </form>
     </div>
-
-    <!-- Events -->
-    <div id="events" class="tab-content">
-        <div class="section-header">
-            <h2 class="section-title">Events & Reminders</h2>
-            <button class="btn btn-primary" onclick="showEventModal()">📅 Add Event</button>
-        </div>
-        <div id="eventsList"></div>
-    </div>
-
-    <!-- Contributions -->
-    <div id="contributions" class="tab-content">
-        <div class="section-header">
-            <h2 class="section-title">Contributions & Giving</h2>
-            <button class="btn btn-primary" onclick="showContributionModal()">💰 Record Contribution</button>
-        </div>
-        <div id="contributionsList" class="content-card"></div>
-    </div>
-
-    <!-- Birthdays -->
-    <div id="birthdays" class="tab-content">
-        <div class="section-header">
-            <h2 class="section-title">Birthday Alerts</h2>
-            <button class="btn btn-primary" onclick="showBirthdayModal()">🎂 Add Birthday</button>
-        </div>
-        <div id="birthdaysList"></div>
-    </div>
+  </div>
+<!-- Attendance -->
+<div id="attendance" class="tab-content">
+  <div class="section-header">
+    <h2 class="section-title">Attendance Tracking</h2>
+    <button class="btn btn-primary" onclick="showAttendanceModal()">📝 Mark Attendance</button>
+  </div>
+  <div class="content-card">
+    <label for="attendanceGroup">Select Group</label>
+    <select id="attendanceGroupSelect"></select>
+    <div id="attendanceMembersList" style="margin-top:10px;"></div>
+  </div>
 </div>
 
+<!-- Attendance Modal -->
+<div id="attendanceModal" class="modal">
+  <div class="modal-content">
+    <h2>📝 Mark Attendance</h2>
+    <form id="attendanceForm">
+      <div class="form-group">
+        <label for="attendanceGroup">Group</label>
+        <select id="attendanceGroupModel"></select>
+      </div>
+      <div id="attendanceMembersModel" class="form-group"></div>
+      <button type="submit" class="btn btn-primary">Save</button>
+      <button type="button" class="btn btn-secondary" onclick="closeModal('attendanceModal')">Cancel</button>
+    </form>
+  </div>
+</div>
+
+<!-- Contributions -->
+<div id="contributions" class="tab-content">
+  <div class="section-header">
+    <h2 class="section-title">Contributions & Giving</h2>
+    <button class="btn btn-primary" onclick="showContributionModal()">💰 Record Contribution</button>
+  </div>
+  <div id="contributionsList" class="content-card"></div>
+</div>
+
+<!-- Contribution Modal -->
+<div id="contributionModal" class="modal">
+  <div class="modal-content">
+    <h2>💰 Record Contribution</h2>
+    <form id="contributionForm">
+      <div class="form-group">
+        <label for="memberGroup">Group</label>
+        <select id="memberGroup"></select>
+      </div>
+      <div class="form-group">
+        <label for="contributionMember">Member</label>
+        <select id="contributionMember"></select>
+      </div>
+      <div class="form-group">
+        <label for="contributionAmount">Amount (KSH)</label>
+        <input type="number" id="contributionAmount" name="contributionAmount" required />
+      </div>
+      <button type="submit" class="btn btn-primary">Save</button>
+      <button type="button" class="btn btn-secondary" onclick="closeModal('contributionModal')">Cancel</button>
+    </form>
+  </div>
+</div>
+
+<!-- Events -->
+<div id="events" class="tab-content">
+  <div class="section-header">
+    <h2 class="section-title">Events & Reminders</h2>
+    <button class="btn btn-primary" onclick="showEventModal()">📅 Add Event</button>
+  </div>
+  <div id="eventsList" class="content-card"></div>
+</div>
+
+<!-- Event Modal -->
+<div id="eventModal" class="modal">
+  <div class="modal-content">
+    <h2>📅 New Event</h2>
+    <form id="eventForm">
+      <div class="form-group">
+        <label for="eventTitle">Title</label>
+        <input type="text" id="eventTitle" name="eventTitle" required />
+      </div>
+      <div class="form-group">
+        <label for="eventDate">Date</label>
+        <input type="date" id="eventDate" name="eventDate" required />
+      </div>
+      <div class="form-group">
+        <label for="eventTarget">Target Group</label>
+        <select id="eventTarget" name="eventTarget" required>
+          <option value="all">All Members</option>
+          <option value="leaders">Leaders</option>
+          <option value="group">Specific Group</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary">Save</button>
+      <button type="button" class="btn btn-secondary" onclick="closeModal('eventModal')">Cancel</button>
+    </form>
+  </div>
+</div>
+
+ 
 <!-- Install Button -->
 <button id="installBtn">📲 Install App</button>
 <button id="forceInstallBtn">Force Install (Test)</button>
 
 <!-- JavaScript -->
 <script type="module" src="./app.js"></script>
-<script>
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./service-worker.js')
-            .then(reg => console.log('Service Worker registered!', reg))
-            .catch(err => console.log('SW registration failed:', err));
-    });
-}
 
-let deferredPrompt;
-const installBtn = document.getElementById('installBtn');
-installBtn.style.display = 'none';
-
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    installBtn.style.display = 'block';
-
-    installBtn.addEventListener('click', async () => {
-        installBtn.style.display = 'none';
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        console.log(`User response: ${outcome}`);
-        deferredPrompt = null;
-    });
-});
-
-window.addEventListener('appinstalled', () => {
-    console.log('PWA installed');
-    installBtn.style.display = 'none';
-});
-
-const forceBtn = document.getElementById('forceInstallBtn');
-forceBtn.addEventListener('click', async () => {
-    if (deferredPrompt) {
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        console.log(`User response: ${outcome}`);
-        deferredPrompt = null;
-    } else {
-        alert('Install prompt not ready yet. Interact with the page first.');
-    }
-});
-</script>
 </body>
 </html>

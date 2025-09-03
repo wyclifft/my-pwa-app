@@ -603,4 +603,58 @@
           cursor: pointer;
         }
 
-        
+
+
+            /* Offline banner */
+        #offline-banner {
+          position: fixed;
+          top: 0; left: 0; right: 0;
+          z-index: 9999;
+          display: none;               /* hidden by default */
+          padding: 10px 14px;
+          text-align: center;
+          font-weight: 600;
+          background: #ffefc1;         /* soft warning */
+          border-bottom: 1px solid rgba(0,0,0,.1);
+        }
+
+        /* Make room if you want to avoid content underlap (optional) */
+        body.has-offline-banner {
+          padding-top: 44px;           /* equals banner height */
+        }
+
+        /* Optional: global style tweaks while offline */
+        body.offline {
+          /* e.g., lower opacity on live widgets, disable pointer events for sync buttons, etc. */
+        }
+
+        /* Optional: a disabled look for buttons when offline */
+        button[data-online-required="true"]:disabled {
+          opacity: .6;
+          cursor: not-allowed;
+        }
+
+
+        .toast-notification {
+  position: fixed;
+  bottom: -100px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  opacity: 0;
+  transition: all 0.5s ease;
+  z-index: 9999;
+}
+
+.toast-notification.show {
+  bottom: 30px;
+  opacity: 1;
+}
+
+
+
+                

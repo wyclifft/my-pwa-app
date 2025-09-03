@@ -1,7 +1,7 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
 const SUPABASE_URL = "https://wyocoumpglwroyzbrvsb.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind5b2NvdW1wZ2x3cm95emJydnNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY2NTE0ODgsImV4cCI6MjA3MjIyNzQ4OH0.ghId1cDHHfyR9C_VmSCGxcE-aqW7kfbbJQ_F7aWan70"; // replace with your key
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind5b2NvdW1wZ2x3cm95emJydnNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY2NTE0ODgsImV4cCI6MjA3MjIyNzQ4OH0.ghId1cDHHfyR9C_VmSCGxcE-aqW7kfbbJQ_F7aWan70";
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // --- Tab Switching ---
@@ -88,8 +88,9 @@ async function loadGroups() {
 
   // Fill selects
   const groupSelect = document.getElementById("memberGroup");
-  const attendanceGroupSelect = document.getElementById("attendanceGroup");
-  [groupSelect, attendanceGroupSelect].forEach(selectEl => {
+  const attendanceGroup = document.getElementById("attendanceGroup");
+
+  [groupSelect, attendanceGroup].forEach(selectEl => {
     if (selectEl) {
       selectEl.innerHTML = "";
       groups.forEach(g => {
@@ -101,10 +102,168 @@ async function loadGroups() {
     }
   });
 
-  if (attendanceGroupSelect?.value) loadAttendanceMembers(attendanceGroupSelect.value);
-
-  loadMembersForContributions();
+  if (attendanceGroup?.value) loadAttendanceMembers(attendanceGroup.value);
+  if (groupSelect?.value) loadMembersForContributions(groupSelect.value);
 }
+
+// --------------- Attendance Tab ---------------
+
+// Populate groups in the attendance tab select
+async function loadAttendanceGroups() {
+  const { data: groups, error } = await supabase
+    .from('groups')
+    .select('*');
+
+  if (error) {
+    console.error('Error fetching groups:', error);
+    return;
+  }
+
+  const select = document.getElementById('attendanceGroupSelect');
+  select.innerHTML = '<option value="">Select a group</option>';
+  groups.forEach(group => {
+    const option = document.createElement('option');
+    option.value = group.id;
+    option.textContent = group.name;
+    select.appendChild(option);
+  });
+}
+
+// When a group is selected in the tab, display its members
+document.getElementById('attendanceGroupSelect').addEventListener('change', async (e) => {
+  const groupId = e.target.value;
+  const membersDiv = document.getElementById('attendanceMembersList');
+  membersDiv.innerHTML = '';
+
+  if (!groupId) return;
+
+  const { data: members, error } = await supabase
+    .from('members')
+    .select('*')
+    .eq('group_id', groupId);
+
+  if (error) {
+    console.error('Error fetching members:', error);
+    return;
+  }
+
+  members.forEach(member => {
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.id = `attendance-${member.id}`;
+    checkbox.value = member.id;
+
+    const label = document.createElement('label');
+    label.htmlFor = checkbox.id;
+    label.textContent = member.name;
+
+    const div = document.createElement('div');
+    div.appendChild(checkbox);
+    div.appendChild(label);
+
+    membersDiv.appendChild(div);
+  });
+});
+
+
+// --------------- Attendance Modal ---------------
+
+// Populate groups in the modal select
+async function loadAttendanceGroupsModal() {
+  const { data: groups, error } = await supabase
+    .from('groups')
+    .select('*');
+
+  if (error) {
+    console.error('Error fetching groups:', error);
+    return;
+  }
+
+  const select = document.getElementById('attendanceGroupModel');
+  select.innerHTML = '<option value="">Select a group</option>';
+  groups.forEach(group => {
+    const option = document.createElement('option');
+    option.value = group.id;
+    option.textContent = group.name;
+    select.appendChild(option);
+  });
+}
+
+// When a group is selected in the modal, display members with checkboxes
+document.getElementById('attendanceGroupModel').addEventListener('change', async (e) => {
+  const groupId = e.target.value;
+  const membersDiv = document.getElementById('attendanceMembersModel');
+  membersDiv.innerHTML = '';
+
+  if (!groupId) return;
+
+  const { data: members, error } = await supabase
+    .from('members')
+    .select('*')
+    .eq('group_id', groupId);
+
+  if (error) {
+    console.error('Error fetching members:', error);
+    return;
+  }
+
+  members.forEach(member => {
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.id = `modal-attendance-${member.id}`;
+    checkbox.value = member.id;
+
+    const label = document.createElement('label');
+    label.htmlFor = checkbox.id;
+    label.textContent = member.name;
+
+    const div = document.createElement('div');
+    div.appendChild(checkbox);
+    div.appendChild(label);
+
+    membersDiv.appendChild(div);
+  });
+});
+
+
+// --------------- Submit Attendance ---------------
+
+document.getElementById('attendanceForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const groupId = document.getElementById('attendanceGroupModel').value;
+  const memberCheckboxes = document.querySelectorAll('#attendanceMembersModel input[type="checkbox"]');
+  const attendedMemberIds = Array.from(memberCheckboxes)
+    .filter(cb => cb.checked)
+    .map(cb => cb.value);
+
+  if (!groupId || attendedMemberIds.length === 0) {
+    alert('Select a group and at least one member.');
+    return;
+  }
+
+  const records = attendedMemberIds.map(memberId => ({
+    group_id: groupId,
+    member_id: memberId,
+    date: new Date().toISOString().split('T')[0] // YYYY-MM-DD
+  }));
+
+  const { error } = await supabase.from('attendance').insert(records);
+
+  if (error) {
+    console.error('Error saving attendance:', error);
+    alert('Failed to save attendance.');
+  } else {
+    alert('Attendance saved successfully!');
+    closeModal('attendanceModal');
+  }
+});
+
+
+// Load both tab and modal groups on page load
+window.addEventListener('DOMContentLoaded', () => {
+  loadAttendanceGroups();
+  loadAttendanceGroupsModal();
+});
 
 // --- Attendance Members ---
 async function loadAttendanceMembers(groupId) {
@@ -118,7 +277,7 @@ async function loadAttendanceMembers(groupId) {
     return console.error(error);
   }
 
-  if (members.length === 0) {
+  if (!members.length) {
     container.innerHTML = "No members in this group yet";
     return;
   }
@@ -131,8 +290,10 @@ async function loadAttendanceMembers(groupId) {
 }
 
 // --- Members for Contributions ---
-async function loadMembersForContributions() {
-  const { data: members, error } = await supabase.from("members").select("id, name");
+async function loadMembersForContributions(groupId) {
+  let query = supabase.from("members").select("id, name");
+  if (groupId) query = query.eq("group_id", groupId);
+  const { data: members, error } = await query;
   const select = document.getElementById("contributionMember");
   if (error || !select) return;
   select.innerHTML = "";
@@ -144,234 +305,48 @@ async function loadMembersForContributions() {
   });
 }
 
-// --- Load Events ---
-async function loadEvents() {
-  const { data: events, error } = await supabase.from("events").select("*").order("date", { ascending: true });
-  const eventsList = document.getElementById("eventsList");
-  if (!eventsList) return;
+// --- Delete Functions ---
+window.deleteGroup = async (id) => { if (!confirm("Are you sure?")) return; await supabase.from("groups").delete().eq("id", id); };
+window.deleteMember = async (id) => { if (!confirm("Are you sure?")) return; await supabase.from("members").delete().eq("id", id); };
+window.deleteEvent = async (id) => { if (!confirm("Are you sure?")) return; await supabase.from("events").delete().eq("id", id); };
 
-  if (error) {
-    eventsList.innerHTML = "❌ Error loading events";
-    return console.error(error);
-  }
+// --- Announcement Form (merged) ---
+const announcementForm = document.getElementById("announcementForm");
+if (announcementForm) {
+  announcementForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const title = document.getElementById("announcementTitle")?.value;
+    const message = document.getElementById("announcementMessage")?.value;
+    const target = document.getElementById("announcementTarget")?.value;
+    const date = document.getElementById("announcementDate")?.value;
 
-  if (events.length === 0) {
-    eventsList.innerHTML = "No events yet";
-    return;
-  }
+    if (!title || !message || !target || !date) return alert("All fields required");
 
-  eventsList.innerHTML = "";
-  events.forEach(e => {
-    const div = document.createElement("div");
-    div.className = "content-item";
-    div.style.display = "flex";
-    div.style.justifyContent = "space-between";
-    div.style.alignItems = "center";
-    div.innerHTML = `<span>📅 ${e.name} on ${e.date}</span>
-                     <button onclick="deleteEvent(${e.id})" class="btn btn-sm btn-danger">🗑 Remove</button>`;
-    eventsList.appendChild(div);
+    const { error } = await supabase.from("announcements").insert([{ title, message, target, date }]);
+    if (error) return alert("Error adding announcement: " + error.message);
+    alert("Announcement added!");
+    closeModal("announcementModal");
+    loadAnnouncements();
   });
 }
 
-// --- Delete Functions ---
-window.deleteGroup = async (id) => { if (!confirm("Are you sure?")) return; const { error } = await supabase.from("groups").delete().eq("id", id); if (error) alert("Error deleting group: " + error.message); };
-window.deleteMember = async (id) => { if (!confirm("Are you sure?")) return; const { error } = await supabase.from("members").delete().eq("id", id); if (error) alert("Error deleting member: " + error.message); };
-window.deleteEvent = async (id) => { if (!confirm("Are you sure?")) return; const { error } = await supabase.from("events").delete().eq("id", id); if (error) alert("Error deleting event: " + error.message); };
-
-// --- Attendance History ---
-async function loadAttendanceHistory() {
-  const { data, error } = await supabase.from("attendance").select("id, event, date, groups(name), attendees").order("date", { ascending: false });
-  const list = document.getElementById("attendanceList");
-  if (!list) return;
-
-  if (error) {
-    list.innerHTML = "❌ Error loading attendance";
-    return console.error(error);
+// --- Attach change listeners instead of inline ---
+document.addEventListener("DOMContentLoaded", () => {
+  const attendanceGroup = document.getElementById("attendanceGroup");
+  if (attendanceGroup) {
+    attendanceGroup.addEventListener("change", (e) => {
+      loadAttendanceMembers(e.target.value);
+    });
   }
 
-  if (data.length === 0) { list.innerHTML = "No attendance records yet"; return; }
-
-  list.innerHTML = "";
-  for (let record of data) {
-    let memberNames = [];
-    if (record.attendees?.length) {
-      const { data: members } = await supabase.from("members").select("name").in("id", record.attendees);
-      memberNames = members?.map(m => m.name) || [];
-    }
-    const div = document.createElement("div");
-    div.className = "content-item";
-    div.innerHTML = `<strong>${record.event}</strong> on ${record.date} (Group: ${record.groups?.name || "Unknown"})<br>
-                     Attendees: ${memberNames.length ? memberNames.join(", ") : "None"}`;
-    list.appendChild(div);
-  }
-}
-
-// --- Realtime Updates ---
-supabase.channel("db-changes")
-  .on("postgres_changes", { event: "*", schema: "public", table: "groups" }, () => { loadGroups(); loadDashboardStats(); })
-  .on("postgres_changes", { event: "*", schema: "public", table: "members" }, () => { loadGroups(); loadDashboardStats(); loadMembersForContributions(); })
-  .on("postgres_changes", { event: "*", schema: "public", table: "events" }, () => { loadEvents(); loadDashboardStats(); })
-  .on("postgres_changes", { event: "*", schema: "public", table: "contributions" }, () => { loadDashboardStats(); })
-  .on("postgres_changes", { event: "*", schema: "public", table: "attendance" }, () => { loadAttendanceHistory(); loadDashboardStats(); })
-  .subscribe();
-
-// --- Init Load ---
-loadDashboardStats();
-loadGroups();
-loadAttendanceHistory();
-loadEvents();
-
-// --- Open Add Member Modal for Specific Group ---
-window.openAddMemberModal = (groupId) => {
   const groupSelect = document.getElementById("memberGroup");
-  if (groupSelect) groupSelect.value = groupId;
-  showAddMemberModal();
-};
-
-// --- Form Submissions ---
-// Add safety checks for each form
-[
-  ["addGroupForm", async (e) => {
-    e.preventDefault();
-    const name = document.getElementById("groupName")?.value;
-    const leaderName = document.getElementById("leaderName")?.value;
-    const leaderPhone = document.getElementById("leaderPhone")?.value;
-    if (!name || !leaderName || !leaderPhone) return alert("All fields are required");
-    const { error } = await supabase.from("groups").insert([{ name, leader_name: leaderName, leader_phone: leaderPhone }]);
-    if (error) return alert(error.message);
-    alert("Group created!");
-    closeModal("addGroupModal");
-    loadGroups();
-    loadDashboardStats();
-  }],
-  ["addMemberForm", async (e) => {
-    e.preventDefault();
-    const name = document.getElementById("memberName")?.value;
-    const phone = document.getElementById("memberPhone")?.value;
-    const birthday = document.getElementById("memberBirthday")?.value || null;
-    const groupId = document.getElementById("memberGroup")?.value;
-    if (!name || !phone || !groupId) return alert("All fields are required");
-    const { error } = await supabase.from("members").insert([{ name, phone, birthday, group_id: groupId }]);
-    if (error) return alert(error.message);
-    alert("Member added!");
-    closeModal("addMemberModal");
-    loadGroups();
-    loadMembersForContributions();
-    loadDashboardStats();
-  }]
-].forEach(([id, handler]) => {
-  const form = document.getElementById(id);
-  if (form) form.addEventListener("submit", handler);
+  if (groupSelect) {
+    groupSelect.addEventListener("change", (e) => {
+      loadMembersForContributions(e.target.value);
+    });
+  }
 });
 
-// --- Event Form Submission ---
-const eventForm = document.getElementById("eventForm");
-if (eventForm) {
-  eventForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const title = document.getElementById("eventTitle")?.value;
-    const date = document.getElementById("eventDate")?.value;
-    const time = document.getElementById("eventTime")?.value;
-    const description = document.getElementById("eventDescription")?.value || "";
-    const target = document.getElementById("eventTarget")?.value;
-    if (!title || !date) return alert("Event title and date are required");
-    
-    const { error } = await supabase.from("events").insert([{ name: title, date, time, description, target_group: target }]);
-    if (error) return alert("Error adding event: " + error.message);
-
-    alert("Event added!");
-    closeModal("eventModal");
-    loadEvents();
-    loadDashboardStats();
-  });
-}
-
-// --- Contribution Form Submission ---
-const contributionForm = document.getElementById("contributionForm");
-if (contributionForm) {
-  contributionForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const memberId = document.getElementById("contributionMember")?.value;
-    const amount = Number(document.getElementById("contributionAmount")?.value);
-    const type = document.getElementById("contributionType")?.value;
-    const date = document.getElementById("contributionDate")?.value;
-    const notes = document.getElementById("contributionNotes")?.value || "";
-    if (!memberId || !amount || !type || !date) return alert("All contribution fields are required");
-
-    const { error } = await supabase.from("contributions").insert([{ member_id: memberId, amount, type, date, notes }]);
-    if (error) return alert("Error recording contribution: " + error.message);
-
-    alert("Contribution recorded!");
-    closeModal("contributionModal");
-    loadGroups();
-    loadDashboardStats();
-  });
-}
-
-// --- Attendance Form Submission ---
-const attendanceForm = document.getElementById("attendanceForm");
-
-if (attendanceForm) {
-  attendanceForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const groupId = document.getElementById("attendanceGroup")?.value;
-    const eventName = document.getElementById("attendanceEvent")?.value;
-    const date = document.getElementById("attendanceDate")?.value;
-
-    if (!groupId || !eventName || !date) return alert("All fields required");
-
-    // Collect checked members
-    const checkedMembers = Array.from(
-      document.querySelectorAll("#attendanceMembers input[type=checkbox]:checked")
-    ).map(input => Number(input.value));
-
-    if (checkedMembers.length === 0) return alert("Select at least one member");
-
-    const { error } = await supabase.from("attendance").insert([{
-      group_id: groupId,
-      event: eventName,
-      date,
-      attendees: checkedMembers // make sure your column is type integer[]
-    }]);
-
-    if (error) return alert("Error saving attendance: " + error.message);
-
-    alert("Attendance saved!");
-    attendanceForm.reset();
-    loadAttendanceHistory();
-  });
-}
-
-// --- Birthday Form Submission ---
-const birthdayForm = document.getElementById("birthdayForm");
-if (birthdayForm) {
-  birthdayForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const memberId = document.getElementById("birthdayMember")?.value;
-    const date = document.getElementById("birthdayDate")?.value;
-    if (!memberId || !date) return alert("Select member and date");
-
-    const { error } = await supabase.from("birthdays").insert([{ member_id: memberId, date }]);
-    if (error) return alert("Error adding birthday: " + error.message);
-
-    alert("Birthday added!");
-    closeModal("birthdayModal");
-    loadDashboardStats();
-  });
-}
-
-// --- Helper to open Add Member Modal for specific group ---
-window.openAddMemberModal = (groupId) => {
-  const groupSelect = document.getElementById("memberGroup");
-  if (groupSelect) groupSelect.value = groupId;
-  showAddMemberModal();
-};
-
-// --- Toggle Member List ---
-window.toggleMembers = (id) => {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.style.display = el.style.display === "none" ? "block" : "none";
-};
-
+// Export globals for reuse
+window.loadAttendanceMembers = loadAttendanceMembers;
+window.loadMembersForContributions = loadMembersForContributions;
