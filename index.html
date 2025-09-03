@@ -189,27 +189,46 @@
 
 
   <!-- Contribution Modal -->
-  <div id="contributionModal" class="modal">
-    <div class="modal-content">
-      <h2>💰 Record Contribution</h2>
-      <form id="contributionForm">
-        <div class="form-group">
-          <label for="memberGroup">Group</label>
-          <select id="memberGroup"></select>
-        </div>
-        <div class="form-group">
-          <label for="contributionMember">Member</label>
-          <select id="contributionMember"></select>
-        </div>
-        <div class="form-group">
-          <label for="contributionAmount">Amount (KSH)</label>
-          <input type="number" id="contributionAmount" required />
-        </div>
-        <button type="submit" class="btn btn-primary">Save</button>
-        <button type="button" class="btn btn-secondary" onclick="closeModal('contributionModal')">Cancel</button>
-      </form>
-    </div>
+<div id="contributionModal" class="modal">
+  <div class="modal-content">
+    <h2>💰 Record Contribution</h2>
+    <form id="contributionForm">
+      <!-- Group Selection -->
+      <div class="form-group">
+        <label for="memberGroup">Group</label>
+        <select id="memberGroup"></select>
+      </div>
+
+      <!-- Member Selection -->
+      <div class="form-group">
+        <label for="contributionMember">Member</label>
+        <select id="contributionMember"></select>
+      </div>
+
+      <!-- Contribution Type -->
+      <div class="form-group">
+        <label for="contributionType">Type</label>
+        <select id="contributionType" required>
+          <option value="">-- Select Type --</option>
+          <option value="Tithes">Tithes</option>
+          <option value="Offering">Offering</option>
+          <option value="Donation">Donation</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+
+      <!-- Amount -->
+      <div class="form-group">
+        <label for="contributionAmount">Amount (KSH)</label>
+        <input type="number" id="contributionAmount" required />
+      </div>
+
+      <!-- Buttons -->
+      <button type="submit" class="btn btn-primary">Save</button>
+      <button type="button" class="btn btn-secondary" onclick="closeModal('contributionModal')">Cancel</button>
+    </form>
   </div>
+</div>
 
   <!-- Announcement Modal -->
 <div id="announcementModal" class="modal">

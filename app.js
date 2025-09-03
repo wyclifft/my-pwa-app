@@ -303,16 +303,24 @@ window.loadContributions = loadContributions;
 // Submit contribution
 document.getElementById("contributionForm")?.addEventListener("submit", async (e) => {
   e.preventDefault();
+
   const groupId = document.getElementById("memberGroup")?.value;
   const memberId = document.getElementById("contributionMember")?.value;
-  const amount = Number(document.getElementById("contributionAmount")?.value);
+  const type = document.getElementById("contributionType")?.value;
+  const amount = parseFloat(document.getElementById("contributionAmount")?.value);
 
-  if (!groupId || !memberId || !amount) return alert("All fields are required.");
+  if (!groupId || !memberId || !type || !amount) return alert("All fields are required");
 
-  const { error } = await supabase.from("contributions").insert([{ group_id: groupId, member_id: memberId, amount }]);
-  if (error) return alert("Failed to save contribution: " + error.message);
+  const { error } = await supabase.from("contributions").insert([{
+    member_id: memberId,
+    amount,
+    type,
+    date: new Date().toISOString().split("T")[0]  // default date
+  }]);
 
-  alert("Contribution recorded!");
+  if (error) return alert("Failed to add contribution: " + error.message);
+
+  alert("Contribution added!");
   closeModal("contributionModal");
   loadContributions();
 });
