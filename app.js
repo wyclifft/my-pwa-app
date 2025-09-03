@@ -113,18 +113,51 @@ window.toggleMembers = (id) => {
   const el = document.getElementById(id);
   if (el) el.style.display = el.style.display === "none" ? "block" : "none";
 };
-
 // ----------------------
 // Attendance
 // ----------------------
-async function loadAttendanceMembers(groupId, containerId = "attendanceMembersList") {
-  const { data: members, error } = await supabase.from("members").select("*").eq("group_id", groupId);
-  const container = document.getElementById(containerId);
+
+// Load groups into the select dropdown
+async function loadAttendanceGroups() {
+  const { data: groups, error } = await supabase.from("groups").select("*").order("name");
+  const groupSelect = document.getElementById("attendanceGroupModel");
+  if (!groupSelect) return;
+
+  groupSelect.innerHTML = '<option value="">-- Select Group --</option>';
+
+  if (error) return console.error("Failed to load groups:", error);
+
+  groups.forEach(g => {
+    const option = document.createElement("option");
+    option.value = g.id;
+    option.textContent = g.name;
+    groupSelect.appendChild(option);
+  });
+}
+
+// Load members for a selected group
+async function loadAttendanceMembers(groupId) {
+  const container = document.getElementById("attendanceMembersModel");
   if (!container) return;
   container.innerHTML = "";
 
-  if (error) { container.innerHTML = "❌ Error loading members"; return console.error(error); }
-  if (!members.length) { container.innerHTML = "No members in this group yet"; return; }
+  if (!groupId) return;
+
+  const { data: members, error } = await supabase
+    .from("members")
+    .select("*")
+    .eq("group_id", groupId)
+    .order("name");
+
+  if (error) {
+    container.innerHTML = "❌ Error loading members";
+    return console.error(error);
+  }
+
+  if (!members.length) {
+    container.innerHTML = "No members in this group yet";
+    return;
+  }
 
   members.forEach(m => {
     const div = document.createElement("div");
@@ -132,22 +165,43 @@ async function loadAttendanceMembers(groupId, containerId = "attendanceMembersLi
     container.appendChild(div);
   });
 }
-window.loadAttendanceMembers = loadAttendanceMembers;
 
+// Initialize group change event
+document.getElementById("attendanceGroupModel")?.addEventListener("change", (e) => {
+  loadAttendanceMembers(e.target.value);
+});
+
+// Submit attendance form
 document.getElementById("attendanceForm")?.addEventListener("submit", async (e) => {
   e.preventDefault();
+
   const groupId = document.getElementById("attendanceGroupModel")?.value;
   const checkboxes = document.querySelectorAll("#attendanceMembersModel input[type='checkbox']");
-  const attendees = Array.from(checkboxes).filter(cb => cb.checked).map(cb => Number(cb.value));
+  const attendees = Array.from(checkboxes)
+    .filter(cb => cb.checked)
+    .map(cb => Number(cb.value));
 
-  if (!groupId || attendees.length === 0) return alert("Select group and at least one member.");
+  if (!groupId) return alert("Please select a group.");
+  if (attendees.length === 0) return alert("Select at least one member.");
 
-  const { error } = await supabase.from("attendance").insert([{ group_id: groupId, attendees, date: new Date().toISOString().split("T")[0], event: "General" }]);
+  const { error } = await supabase.from("attendance").insert([{
+    group_id: groupId,
+    attendees,
+    date: new Date().toISOString().split("T")[0],
+    event: "General"
+  }]);
+
   if (error) return alert("Failed to save attendance: " + error.message);
 
   alert("Attendance saved!");
   closeModal("attendanceModal");
+
+  // Optionally reload attendance list if you have one
 });
+
+// Load groups immediately on page load
+loadAttendanceGroups();
+
 
 // ----------------------
 // Contributions
