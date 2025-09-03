@@ -3,8 +3,8 @@ import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 // ----------------------
 // App Version
 // ----------------------
-const APP_VERSION = "1.0.0";
-console.log("Tecra Dashboard App Version:", APP_VERSION);
+const APP_VERSION = "5.0.0";
+console.log("First servise App Version:", APP_VERSION);
 
 // ----------------------
 // Supabase Setup
@@ -168,52 +168,85 @@ document.getElementById("attendanceForm")?.addEventListener("submit", async e =>
 }
 );
 loadAttendanceGroups();
-
 // ----------------------
 // Contributions
 // ----------------------
-async function loadMembersForContributions(groupId) {
-  const { data: members } = await supabase.from("members").select("*").eq("group_id", groupId);
-  const select = document.getElementById("contributionMember");
-  if (!select) return;
-  select.innerHTML = "";
-  members?.forEach(m => {
-    const opt = document.createElement("option");
-    opt.value = m.id;
-    opt.textContent = m.name;
-    select.appendChild(opt);
-  });
-}
-window.loadMembersForContributions = loadMembersForContributions;
-
 async function loadContributions() {
-  const { data: contributions } = await supabase.from("contributions").select("id, amount, group_id, member_id, created_at, groups(name), members(name)").order("created_at", { ascending: false });
-  const container = document.getElementById("contributionsList");
-  if (!container) return;
-  container.innerHTML = "";
-  contributions?.forEach(c => {
-    const div = document.createElement("div");
-    div.className = "content-card";
-    div.innerHTML = `<strong>${c.members?.name || "Unknown Member"}</strong> from <em>${c.groups?.name || "Unknown Group"}</em> contributed <strong>KSH ${Number(c.amount).toLocaleString()}</strong><br><small>${new Date(c.created_at).toLocaleDateString()}</small>`;
-    container.appendChild(div);
-  });
+  try {
+    // Fetch contributions along with group and member names
+    const { data: contributions, error } = await supabase
+      .from("contributions")
+      .select(`
+        id,
+        amount,
+        type,
+        created_at,
+        groups!inner(name),
+        members!inner(name)
+      `)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    const container = document.getElementById("contributionsList");
+    if (!container) return;
+    container.innerHTML = "";
+
+    contributions?.forEach(c => {
+      const div = document.createElement("div");
+      div.className = "content-card";
+      div.innerHTML = `
+        <strong>${c.members?.name || "Unknown Member"}</strong> from 
+        <em>${c.groups?.name || "Unknown Group"}</em> contributed 
+        <strong>KSH ${Number(c.amount).toLocaleString()}</strong><br>
+        <small>Type: ${c.type || "N/A"} | ${new Date(c.created_at).toLocaleDateString()}</small>
+      `;
+      container.appendChild(div);
+    });
+  } catch (err) {
+    console.error("Failed to load contributions:", err.message);
+  }
 }
 window.loadContributions = loadContributions;
 
+// ----------------------
+// Contribution Form Submit
+// ----------------------
 document.getElementById("contributionForm")?.addEventListener("submit", async e => {
   e.preventDefault();
+
   const groupId = document.getElementById("memberGroup")?.value;
   const memberId = document.getElementById("contributionMember")?.value;
   const type = document.getElementById("contributionType")?.value;
   const amount = parseFloat(document.getElementById("contributionAmount")?.value);
-  if (!groupId || !memberId || !type || !amount) return alert("All fields are required");
-  const { error } = await supabase.from("contributions").insert([{ member_id: memberId, amount, type, date: new Date().toISOString().split("T")[0] }]);
-  if (error) return alert("Failed to add contribution: " + error.message);
-  alert("Contribution added!");
-  closeModal("contributionModal");
-  loadContributions();
+
+  // Validate input
+  if (!groupId || !memberId || !type || !amount) {
+    return alert("All fields are required");
+  }
+
+  try {
+    const { error } = await supabase.from("contributions").insert([{
+      member_id: memberId,
+      group_id: groupId,
+      amount,
+      type, // ensure this matches your DB column
+      created_at: new Date().toISOString()
+    }]);
+
+    if (error) throw error;
+
+    alert("Contribution added!");
+    closeModal("contributionModal");
+    loadContributions(); // reload contributions
+  } catch (err) {
+    alert("Failed to add contribution: " + err.message);
+  }
 });
 
+// ----------------------
+// Load members when group changes
+// ----------------------
 document.getElementById("memberGroup")?.addEventListener("change", e => loadMembersForContributions(e.target.value));
 
 // ----------------------
