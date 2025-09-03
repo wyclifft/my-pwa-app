@@ -163,20 +163,30 @@
   </div>
 
   <!-- Attendance Modal -->
-  <div id="attendanceModal" class="modal">
-    <div class="modal-content">
-      <h2>📝 Mark Attendance</h2>
-      <form id="attendanceForm">
-        <div class="form-group">
-          <label for="attendanceGroupModel">Select Group</label>
-          <select id="attendanceGroupModel"></select>
-        </div>
-        <div id="attendanceMembersModel" class="form-group"></div>
-        <button type="submit" class="btn btn-primary">Save</button>
-        <button type="button" class="btn btn-secondary" onclick="closeModal('attendanceModal')">Cancel</button>
-      </form>
-    </div>
+<div id="attendanceModal" class="modal">
+  <div class="modal-content">
+    <h2>📝 Mark Attendance</h2>
+    <form id="attendanceForm">
+      <!-- Group Selection -->
+      <div class="form-group">
+        <label for="attendanceGroupModel">Select Group</label>
+        <select id="attendanceGroupModel">
+          <option value="">-- Loading groups... --</option>
+        </select>
+      </div>
+
+      <!-- Members Checkboxes -->
+      <div id="attendanceMembersModel" class="form-group">
+        <!-- Checkboxes for members will be inserted here dynamically -->
+      </div>
+
+      <!-- Submit -->
+      <button type="submit" class="btn btn-primary">Save</button>
+      <button type="button" class="btn btn-secondary" onclick="closeModal('attendanceModal')">Cancel</button>
+    </form>
   </div>
+</div>
+
 
   <!-- Contribution Modal -->
   <div id="contributionModal" class="modal">
@@ -243,10 +253,6 @@
       </form>
     </div>
   </div>
-
-  <!-- Install Button -->
-  <button id="installBtn">📲 Install App</button>
-</div>
 
 <!-- JavaScript -->
 <script type="module" src="./app.js"></script>

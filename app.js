@@ -113,11 +113,12 @@ window.toggleMembers = (id) => {
   const el = document.getElementById(id);
   if (el) el.style.display = el.style.display === "none" ? "block" : "none";
 };
+
 // ----------------------
 // Attendance
 // ----------------------
 
-// Load groups into the select dropdown
+// 1️⃣ Load groups into the dropdown
 async function loadAttendanceGroups() {
   const { data: groups, error } = await supabase.from("groups").select("*").order("name");
   const groupSelect = document.getElementById("attendanceGroupModel");
@@ -135,7 +136,7 @@ async function loadAttendanceGroups() {
   });
 }
 
-// Load members for a selected group
+// 2️⃣ Load members for selected group
 async function loadAttendanceMembers(groupId) {
   const container = document.getElementById("attendanceMembersModel");
   if (!container) return;
@@ -166,12 +167,12 @@ async function loadAttendanceMembers(groupId) {
   });
 }
 
-// Initialize group change event
+// 3️⃣ When group is changed, load members
 document.getElementById("attendanceGroupModel")?.addEventListener("change", (e) => {
   loadAttendanceMembers(e.target.value);
 });
 
-// Submit attendance form
+// 4️⃣ Submit attendance form
 document.getElementById("attendanceForm")?.addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -187,8 +188,8 @@ document.getElementById("attendanceForm")?.addEventListener("submit", async (e) 
   const { error } = await supabase.from("attendance").insert([{
     group_id: groupId,
     attendees,
-    date: new Date().toISOString().split("T")[0],
-    event: "General"
+    date: new Date().toISOString().split("T")[0], // matches your DB
+    event: "General" // default event
   }]);
 
   if (error) return alert("Failed to save attendance: " + error.message);
@@ -196,11 +197,12 @@ document.getElementById("attendanceForm")?.addEventListener("submit", async (e) 
   alert("Attendance saved!");
   closeModal("attendanceModal");
 
-  // Optionally reload attendance list if you have one
+  // Optionally reload attendance list here if you have one
 });
 
-// Load groups immediately on page load
+// 5️⃣ Initialize groups on page load
 loadAttendanceGroups();
+
 
 
 // ----------------------
