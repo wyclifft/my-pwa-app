@@ -165,7 +165,11 @@ window.loadMembersForContributions = loadMembersForContributions;
 // Announcements
 // ----------------------
 async function loadAnnouncements() {
-  const { data: announcements, error } = await supabase.from("announcements").select("*").order("date", { ascending: false });
+  const { data: announcements, error } = await supabase
+    .from("announcements")
+    .select("*")
+    .order("date", { ascending: false });
+
   const container = document.getElementById("announcementsList");
   if (!container) return;
   container.innerHTML = "";
@@ -175,7 +179,7 @@ async function loadAnnouncements() {
   announcements.forEach(a => {
     const div = document.createElement("div");
     div.className = "content-card";
-    div.innerHTML = `<h4>${a.title}</h4><p>${a.content}</p><small>${a.date}</small>`;
+    div.innerHTML = `<h4>${a.title}</h4><p>${a.message}</p><small>${a.date}</small>`; // updated to a.message
     container.appendChild(div);
   });
 }
@@ -184,12 +188,14 @@ window.loadAnnouncements = loadAnnouncements;
 // Submit announcement
 document.getElementById("announcementForm")?.addEventListener("submit", async (e) => {
   e.preventDefault();
-  const title = document.getElementById("announcementTitle")?.value;
-  const content = document.getElementById("announcementMessage")?.value;
-  const date = document.getElementById("announcementDate")?.value;
-  if (!title || !content || !date) return alert("All fields required");
 
-  const { error } = await supabase.from("announcements").insert([{ title, content, date }]);
+  const title = document.getElementById("announcementTitle")?.value;
+  const message = document.getElementById("announcementMessage")?.value; // updated variable
+  const date = document.getElementById("announcementDate")?.value;
+
+  if (!title || !message || !date) return alert("All fields required");
+
+  const { error } = await supabase.from("announcements").insert([{ title, message, date }]); // send 'message' instead of 'content'
   if (error) return alert("Failed to add announcement: " + error.message);
 
   alert("Announcement added!");
