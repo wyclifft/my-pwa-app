@@ -179,7 +179,11 @@ async function loadAnnouncements() {
   announcements.forEach(a => {
     const div = document.createElement("div");
     div.className = "content-card";
-    div.innerHTML = `<h4>${a.title}</h4><p>${a.message}</p><small>${a.date}</small>`; // updated to a.message
+    div.innerHTML = `
+      <h4>${a.title ?? ""}</h4>
+      <p>${a.message ?? ""}</p>
+      <small>${a.date ?? ""}</small>
+    `;
     container.appendChild(div);
   });
 }
@@ -189,13 +193,16 @@ window.loadAnnouncements = loadAnnouncements;
 document.getElementById("announcementForm")?.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const title = document.getElementById("announcementTitle")?.value;
-  const message = document.getElementById("announcementMessage")?.value; // updated variable
+  // Trim values to remove whitespace (mobile-safe)
+  const title = document.getElementById("announcementTitle")?.value.trim();
+  const message = document.getElementById("announcementMessage")?.value.trim();
   const date = document.getElementById("announcementDate")?.value;
+
+  console.log("Debug:", { title, message, date }); // check values on mobile
 
   if (!title || !message || !date) return alert("All fields required");
 
-  const { error } = await supabase.from("announcements").insert([{ title, message, date }]); // send 'message' instead of 'content'
+  const { error } = await supabase.from("announcements").insert([{ title, message, date }]);
   if (error) return alert("Failed to add announcement: " + error.message);
 
   alert("Announcement added!");
@@ -203,21 +210,6 @@ document.getElementById("announcementForm")?.addEventListener("submit", async (e
   loadAnnouncements();
 });
 
-// ----------------------
-// Delete
-// ----------------------
-window.deleteGroup = async (id) => { if (!confirm("Are you sure?")) return; await supabase.from("groups").delete().eq("id", id); loadGroups(); };
-window.deleteMember = async (id) => { if (!confirm("Are you sure?")) return; await supabase.from("members").delete().eq("id", id); loadGroups(); };
-window.deleteEvent = async (id) => { if (!confirm("Are you sure?")) return; await supabase.from("events").delete().eq("id", id); };
-
-// ----------------------
-// Initialize everything on page load
-// ----------------------
-window.addEventListener("DOMContentLoaded", () => {
-  loadDashboardStats();
-  loadGroups();
-  loadAnnouncements();
-});
 
 // ----------------------
 // Contributions

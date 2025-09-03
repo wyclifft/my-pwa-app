@@ -202,27 +202,28 @@
   </div>
 
   <!-- Announcement Modal -->
-  <div id="announcementModal" class="modal">
-    <div class="modal-content">
-      <h2>📢 New Announcement</h2>
-      <form id="announcementForm">
-        <div class="form-group">
-          <label for="announcementTitle">Title</label>
-          <input type="text" id="announcementTitle" required />
-        </div>
-        <div class="form-group">
-          <label for="announcementMessage">Message</label>
-          <textarea id="announcementMessage" required></textarea>
-        </div>
-        <div class="form-group">
-          <label for="announcementDate">Date</label>
-          <input type="date" id="announcementDate" required />
-        </div>
-        <button type="submit" class="btn btn-primary">Save</button>
-        <button type="button" class="btn btn-secondary" onclick="closeModal('announcementModal')">Cancel</button>
-      </form>
-    </div>
+<div id="announcementModal" class="modal">
+  <div class="modal-content">
+    <h2>📢 New Announcement</h2>
+    <form id="announcementForm">
+      <div class="form-group">
+        <label for="announcementTitle">Title</label>
+        <input type="text" id="announcementTitle" required />
+      </div>
+      <div class="form-group">
+        <label for="announcementMessage">Message</label>
+        <textarea id="announcementMessage" required></textarea>
+      </div>
+      <div class="form-group">
+        <label for="announcementDate">Date</label>
+        <input type="date" id="announcementDate" required />
+      </div>
+      <button type="submit" class="btn btn-primary">Save</button>
+      <button type="button" class="btn btn-secondary" onclick="closeModal('announcementModal')">Cancel</button>
+    </form>
   </div>
+</div>
+
 
   <!-- Event Modal -->
   <div id="eventModal" class="modal">
