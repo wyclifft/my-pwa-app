@@ -1,592 +1,254 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Men's Fellowship Management System</title>
-    <!-- CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/feather-icons"></script>
-    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
-    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="manifest.json"/>
-    <meta name="theme-color" content="#3b82f6"/>
-    <style>
-        :root {
-            --primary: #3b82f6;
-            --primary-hover: #2563eb;
-            --secondary: #64748b;
-            --dark: #1e293b;
-            --light: #f8fafc;
-            --card-bg: #ffffff;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Men’s Fellowship Management System</title>
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f1f5f9;
-            color: var(--dark);
-        }
+  <!-- CSS -->
+  <link href="css/style.css" rel="stylesheet" />
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 1rem;
-        }
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json"/>
+  <meta name="theme-color" content="#007bff"/>
 
-        .header {
-            text-align: center;
-            margin-bottom: 2rem;
-            padding: 1rem;
-            background-color: var(--primary);
-            color: white;
-            border-radius: 0.5rem;
-            box-shadow: var(--shadow);
-        }
-
-        .nav-tabs {
-            display: flex;
-            overflow-x: auto;
-            gap: 0.5rem;
-            margin-bottom: 1.5rem;
-            padding-bottom: 0.5rem;
-        }
-
-        .nav-tab {
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
-            background-color: var(--card-bg);
-            border: none;
-            cursor: pointer;
-            font-weight: 500;
-            white-space: nowrap;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            box-shadow: var(--shadow);
-            transition: all 0.2s ease;
-        }
-
-        .nav-tab:hover {
-            background-color: #e2e8f0;
-        }
-
-        .nav-tab.active {
-            background-color: var(--primary);
-            color: white;
-        }
-
-        .tab-content {
-            display: none;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        .stat-card {
-            background-color: var(--card-bg);
-            padding: 1.5rem;
-            border-radius: 0.5rem;
-            text-align: center;
-            box-shadow: var(--shadow);
-            transition: transform 0.2s ease;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-2px);
-        }
-
-        .stat-number {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--primary);
-            margin-bottom: 0.5rem;
-        }
-
-        .stat-label {
-            color: var(--secondary);
-            font-size: 0.875rem;
-        }
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-        }
-
-        .section-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: var(--dark);
-        }
-
-        .btn {
-            padding: 0.5rem 1rem;
-            border-radius: 0.375rem;
-            font-weight: 500;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            border: none;
-        }
-
-        .btn-primary {
-            background-color: var(--primary);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background-color: var(--primary-hover);
-        }
-
-        .btn-secondary {
-            background-color: var(--secondary);
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background-color: #475569;
-        }
-
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 1rem;
-        }
-
-        .group-card {
-            background-color: var(--card-bg);
-            border-radius: 0.5rem;
-            padding: 1rem;
-            box-shadow: var(--shadow);
-            transition: transform 0.2s ease;
-        }
-
-        .group-card:hover {
-            transform: translateY(-2px);
-        }
-
-        .content-card {
-            background-color: var(--card-bg);
-            border-radius: 0.5rem;
-            padding: 1.5rem;
-            box-shadow: var(--shadow);
-            margin-bottom: 1.5rem;
-        }
-
-        .form-group {
-            margin-bottom: 1rem;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-        }
-
-        input, select, textarea {
-            width: 100%;
-            padding: 0.5rem;
-            border-radius: 0.375rem;
-            border: 1px solid #cbd5e1;
-            transition: border-color 0.2s ease;
-        }
-
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal-content {
-            background-color: white;
-            padding: 2rem;
-            border-radius: 0.5rem;
-            width: 90%;
-            max-width: 500px;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-        }
-
-        .modal h2 {
-            margin-top: 0;
-            margin-bottom: 1.5rem;
-            color: var(--dark);
-        }
-
-        #installBtn {
-            display: none;
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            padding: 0.75rem 1.25rem;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 0.5rem;
-            cursor: pointer;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            font-size: 0.875rem;
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        #installBtn:hover {
-            background: var(--primary-hover);
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        @media (max-width: 768px) {
-            .stats-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-            
-            .section-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 1rem;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .nav-tabs {
-                flex-wrap: wrap;
-            }
-        }
-    </style>
+  <style>
+    #installBtn {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 12px 18px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      font-size: 16px;
+      z-index: 1000;
+    }
+    #installBtn:hover { background: #0056b3; }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1 class="text-2xl font-bold flex items-center justify-center gap-2">
-                <i data-feather="users"></i>
-                Men's Fellowship Management System
-            </h1>
-        </div>
+<div class="container">
+  <div class="header">
+    <h1>⛪ Men’s Fellowship Management System</h1>
+  </div>
 
-        <!-- Navigation Tabs -->
-        <div class="nav-tabs">
-            <button class="nav-tab active" onclick="showTab('dashboard')">
-                <i data-feather="home"></i> Dashboard
-            </button>
-            <button class="nav-tab" onclick="showTab('groups')">
-                <i data-feather="users"></i> Groups
-            </button>
-            <button class="nav-tab" onclick="showTab('attendance')">
-                <i data-feather="clipboard"></i> Attendance
-            </button>
-            <button class="nav-tab" onclick="showTab('announcements')">
-                <i data-feather="bell"></i> Announcements
-            </button>
-            <button class="nav-tab" onclick="showTab('events')">
-                <i data-feather="calendar"></i> Events
-            </button>
-            <button class="nav-tab" onclick="showTab('contributions')">
-                <i data-feather="dollar-sign"></i> Contributions
-            </button>
-        </div>
+  <!-- Navigation Tabs -->
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showTab('dashboard')">📊 Dashboard</button>
+    <button class="nav-tab" onclick="showTab('groups')">👥 Groups</button>
+    <button class="nav-tab" onclick="showTab('attendance')">📋 Attendance</button>
+    <button class="nav-tab" onclick="showTab('announcements')">📢 Announcements</button>
+    <button class="nav-tab" onclick="showTab('events')">📅 Events</button>
+    <button class="nav-tab" onclick="showTab('contributions')">💰 Contributions</button>
+  </div>
 
-        <!-- Dashboard -->
-        <div id="dashboard" class="tab-content active">
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-number" id="totalGroups">0</div>
-                    <div class="stat-label">Total Groups</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="totalMembers">0</div>
-                    <div class="stat-label">Total Members</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="totalContributions">0</div>
-                    <div class="stat-label">Total Contributions (KSH)</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="upcomingEvents">0</div>
-                    <div class="stat-label">Upcoming Events</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Groups -->
-        <div id="groups" class="tab-content">
-            <div class="section-header">
-                <h2 class="section-title">Church Groups</h2>
-                <button class="btn btn-primary" onclick="showAddGroupModal()">
-                    <i data-feather="plus"></i> Add Group
-                </button>
-            </div>
-            <div id="groupsList" class="dashboard-grid"></div>
-        </div>
-
-        <!-- Attendance -->
-        <div id="attendance" class="tab-content">
-            <div class="section-header">
-                <h2 class="section-title">Attendance Tracking</h2>
-                <button class="btn btn-primary" onclick="showAttendanceModal()">
-                    <i data-feather="edit"></i> Mark Attendance
-                </button>
-            </div>
-            <div class="content-card">
-                <div class="form-group">
-                    <label for="attendanceGroupSelect">Select Group</label>
-                    <select id="attendanceGroupSelect"></select>
-                </div>
-                <div id="attendanceMembersList" style="margin-top:1rem;"></div>
-            </div>
-        </div>
-
-        <!-- Contributions -->
-        <div id="contributions" class="tab-content">
-            <div class="section-header">
-                <h2 class="section-title">Contributions & Giving</h2>
-                <button class="btn btn-primary" onclick="showContributionModal()">
-                    <i data-feather="dollar-sign"></i> Record Contribution
-                </button>
-            </div>
-            <div id="contributionsList" class="content-card"></div>
-        </div>
-
-        <!-- Announcements -->
-        <div id="announcements" class="tab-content">
-            <div class="section-header">
-                <h2 class="section-title">Announcements</h2>
-                <button class="btn btn-primary" onclick="showAnnouncementModal()">
-                    <i data-feather="plus"></i> Add Announcement
-                </button>
-            </div>
-            <div id="announcementsList" class="content-card"></div>
-        </div>
-
-        <!-- Events -->
-        <div id="events" class="tab-content">
-            <div class="section-header">
-                <h2 class="section-title">Events & Reminders</h2>
-                <button class="btn btn-primary" onclick="showEventModal()">
-                    <i data-feather="plus"></i> Add Event
-                </button>
-            </div>
-            <div id="eventsList" class="content-card"></div>
-        </div>
-
-        <!-- Modals -->
-        <!-- Add Group Modal -->
-        <div id="addGroupModal" class="modal">
-            <div class="modal-content">
-                <h2 class="flex items-center gap-2">
-                    <i data-feather="users"></i> New Group
-                </h2>
-                <form id="addGroupForm">
-                    <div class="form-group">
-                        <label for="groupName">Group Name</label>
-                        <input type="text" id="groupName" required />
-                    </div>
-                    <div class="form-group">
-                        <label for="groupLeader">Leader Name</label>
-                        <input type="text" id="groupLeader" />
-                    </div>
-                    <div class="form-group">
-                        <label for="leaderPhone">Leader Phone</label>
-                        <input type="text" id="leaderPhone" />
-                    </div>
-                    <div class="flex gap-2">
-                        <button type="submit" class="btn btn-primary">
-                            <i data-feather="save"></i> Save
-                        </button>
-                        <button type="button" class="btn btn-secondary" onclick="closeModal('addGroupModal')">
-                            <i data-feather="x"></i> Cancel
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Add Member Modal -->
-        <div id="addMemberModal" class="modal">
-            <div class="modal-content">
-                <h2 class="flex items-center gap-2">
-                    <i data-feather="user-plus"></i> Add Member
-                </h2>
-                <form id="addMemberForm">
-                    <div class="form-group">
-                        <label for="memberName">Member Name</label>
-                        <input type="text" id="memberName" required />
-                    </div>
-                    <div class="form-group">
-                        <label for="memberPhone">Phone</label>
-                        <input type="text" id="memberPhone" />
-                    </div>
-                    <div class="flex gap-2">
-                        <button type="submit" class="btn btn-primary">
-                            <i data-feather="save"></i> Save
-                        </button>
-                        <button type="button" class="btn btn-secondary" onclick="closeModal('addMemberModal')">
-                            <i data-feather="x"></i> Cancel
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Attendance Modal -->
-        <div id="attendanceModal" class="modal">
-            <div class="modal-content">
-                <h2 class="flex items-center gap-2">
-                    <i data-feather="clipboard"></i> Mark Attendance
-                </h2>
-                <form id="attendanceForm">
-                    <div class="form-group">
-                        <label for="attendanceGroupModel">Select Group</label>
-                        <select id="attendanceGroupModel"></select>
-                    </div>
-                    <div id="attendanceMembersModel" class="form-group"></div>
-                    <div class="flex gap-2">
-                        <button type="submit" class="btn btn-primary">
-                            <i data-feather="save"></i> Save
-                        </button>
-                        <button type="button" class="btn btn-secondary" onclick="closeModal('attendanceModal')">
-                            <i data-feather="x"></i> Cancel
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Contribution Modal -->
-        <div id="contributionModal" class="modal">
-            <div class="modal-content">
-                <h2 class="flex items-center gap-2">
-                    <i data-feather="dollar-sign"></i> Record Contribution
-                </h2>
-                <form id="contributionForm">
-                    <div class="form-group">
-                        <label for="memberGroup">Group</label>
-                        <select id="memberGroup"></select>
-                    </div>
-                    <div class="form-group">
-                        <label for="contributionMember">Member</label>
-                        <select id="contributionMember"></select>
-                    </div>
-                    <div class="form-group">
-                        <label for="contributionAmount">Amount (KSH)</label>
-                        <input type="number" id="contributionAmount" required />
-                    </div>
-                    <div class="flex gap-2">
-                        <button type="submit" class="btn btn-primary">
-                            <i data-feather="save"></i> Save
-                        </button>
-                        <button type="button" class="btn btn-secondary" onclick="closeModal('contributionModal')">
-                            <i data-feather="x"></i> Cancel
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Announcement Modal -->
-        <div id="announcementModal" class="modal">
-            <div class="modal-content">
-                <h2 class="flex items-center gap-2">
-                    <i data-feather="bell"></i> New Announcement
-                </h2>
-                <form id="announcementForm">
-                    <div class="form-group">
-                        <label for="announcementTitle">Title</label>
-                        <input type="text" id="announcementTitle" required />
-                    </div>
-                    <div class="form-group">
-                        <label for="announcementMessage">Message</label>
-                        <textarea id="announcementMessage" required></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="announcementDate">Date</label>
-                        <input type="date" id="announcementDate" required />
-                    </div>
-                    <div class="flex gap-2">
-                        <button type="submit" class="btn btn-primary">
-                            <i data-feather="save"></i> Save
-                        </button>
-                        <button type="button" class="btn btn-secondary" onclick="closeModal('announcementModal')">
-                            <i data-feather="x"></i> Cancel
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Event Modal -->
-        <div id="eventModal" class="modal">
-            <div class="modal-content">
-                <h2 class="flex items-center gap-2">
-                    <i data-feather="calendar"></i> New Event
-                </h2>
-                <form id="eventForm">
-                    <div class="form-group">
-                        <label for="eventTitle">Title</label>
-                        <input type="text" id="eventTitle" required />
-                    </div>
-                    <div class="form-group">
-                        <label for="eventDate">Date</label>
-                        <input type="date" id="eventDate" required />
-                    </div>
-                    <div class="flex gap-2">
-                        <button type="submit" class="btn btn-primary">
-                            <i data-feather="save"></i> Save
-                        </button>
-                        <button type="button" class="btn btn-secondary" onclick="closeModal('eventModal')">
-                            <i data-feather="x"></i> Cancel
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Install Button -->
-        <button id="installBtn">
-            <i data-feather="download"></i> Install App
-        </button>
+  <!-- Dashboard -->
+  <div id="dashboard" class="tab-content active">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-number" id="totalGroups">0</div>
+        <div class="stat-label">Total Groups</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="totalMembers">0</div>
+        <div class="stat-label">Total Members</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="totalContributions">0</div>
+        <div class="stat-label">Total Contributions (KSH)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="upcomingEvents">0</div>
+        <div class="stat-label">Upcoming Events</div>
+      </div>
     </div>
+  </div>
 
-    <!-- JavaScript -->
-    <script>AOS.init();</script>
-    <script>feather.replace();</script>
-    <script type="module" src="./app.js"></script>
+  <!-- Groups -->
+  <div id="groups" class="tab-content">
+    <div class="section-header">
+      <h2 class="section-title">Church Groups</h2>
+      <button class="btn btn-primary" onclick="showAddGroupModal()">➕ Add Group</button>
+    </div>
+    <div id="groupsList" class="dashboard-grid"></div>
+  </div>
+
+  <!-- Attendance -->
+  <div id="attendance" class="tab-content">
+    <div class="section-header">
+      <h2 class="section-title">Attendance Tracking</h2>
+      <button class="btn btn-primary" onclick="showAttendanceModal()">📝 Mark Attendance</button>
+    </div>
+    <div class="content-card">
+      <label for="attendanceGroupSelect">Select Group</label>
+      <select id="attendanceGroupSelect"></select>
+      <div id="attendanceMembersList" style="margin-top:10px;"></div>
+    </div>
+  </div>
+
+  <!-- Contributions -->
+  <div id="contributions" class="tab-content">
+    <div class="section-header">
+      <h2 class="section-title">Contributions & Giving</h2>
+      <button class="btn btn-primary" onclick="showContributionModal()">💰 Record Contribution</button>
+    </div>
+    <div id="contributionsList" class="content-card"></div>
+  </div>
+
+  <!-- Announcements -->
+  <div id="announcements" class="tab-content">
+    <div class="section-header">
+      <h2 class="section-title">Announcements</h2>
+      <button class="btn btn-primary" onclick="showAnnouncementModal()">📢 Add Announcement</button>
+    </div>
+    <div id="announcementsList" class="content-card"></div>
+  </div>
+
+  <!-- Events -->
+  <div id="events" class="tab-content">
+    <div class="section-header">
+      <h2 class="section-title">Events & Reminders</h2>
+      <button class="btn btn-primary" onclick="showEventModal()">📅 Add Event</button>
+    </div>
+    <div id="eventsList" class="content-card"></div>
+  </div>
+
+  <!-- Modals -->
+
+  <!-- Add Group Modal -->
+  <div id="addGroupModal" class="modal">
+    <div class="modal-content">
+      <h2>➕ New Group</h2>
+      <form id="addGroupForm">
+        <div class="form-group">
+          <label for="groupName">Group Name</label>
+          <input type="text" id="groupName" required />
+        </div>
+        <div class="form-group">
+          <label for="groupLeader">Leader Name</label>
+          <input type="text" id="groupLeader" />
+        </div>
+        <div class="form-group">
+          <label for="leaderPhone">Leader Phone</label>
+          <input type="text" id="leaderPhone" />
+        </div>
+        <button type="submit" class="btn btn-primary">Save</button>
+        <button type="button" class="btn btn-secondary" onclick="closeModal('addGroupModal')">Cancel</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Member Modal -->
+  <div id="addMemberModal" class="modal">
+    <div class="modal-content">
+      <h2>➕ Add Member</h2>
+      <form id="addMemberForm">
+        <div class="form-group">
+          <label for="memberName">Member Name</label>
+          <input type="text" id="memberName" required />
+        </div>
+        <div class="form-group">
+          <label for="memberPhone">Phone</label>
+          <input type="text" id="memberPhone" />
+        </div>
+        <button type="submit" class="btn btn-primary">Save</button>
+        <button type="button" class="btn btn-secondary" onclick="closeModal('addMemberModal')">Cancel</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Attendance Modal -->
+  <div id="attendanceModal" class="modal">
+    <div class="modal-content">
+      <h2>📝 Mark Attendance</h2>
+      <form id="attendanceForm">
+        <div class="form-group">
+          <label for="attendanceGroupModel">Select Group</label>
+          <select id="attendanceGroupModel"></select>
+        </div>
+        <div id="attendanceMembersModel" class="form-group"></div>
+        <button type="submit" class="btn btn-primary">Save</button>
+        <button type="button" class="btn btn-secondary" onclick="closeModal('attendanceModal')">Cancel</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Contribution Modal -->
+  <div id="contributionModal" class="modal">
+    <div class="modal-content">
+      <h2>💰 Record Contribution</h2>
+      <form id="contributionForm">
+        <div class="form-group">
+          <label for="memberGroup">Group</label>
+          <select id="memberGroup"></select>
+        </div>
+        <div class="form-group">
+          <label for="contributionMember">Member</label>
+          <select id="contributionMember"></select>
+        </div>
+        <div class="form-group">
+          <label for="contributionAmount">Amount (KSH)</label>
+          <input type="number" id="contributionAmount" required />
+        </div>
+        <button type="submit" class="btn btn-primary">Save</button>
+        <button type="button" class="btn btn-secondary" onclick="closeModal('contributionModal')">Cancel</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Announcement Modal -->
+<div id="announcementModal" class="modal">
+  <div class="modal-content">
+    <h2>📢 New Announcement</h2>
+    <form id="announcementForm">
+      <div class="form-group">
+        <label for="announcementTitle">Title</label>
+        <input type="text" id="announcementTitle" required />
+      </div>
+      <div class="form-group">
+        <label for="announcementMessage">Message</label>
+        <textarea id="announcementMessage" required></textarea>
+      </div>
+      <div class="form-group">
+        <label for="announcementDate">Date</label>
+        <input type="date" id="announcementDate" required />
+      </div>
+      <button type="submit" class="btn btn-primary">Save</button>
+      <button type="button" class="btn btn-secondary" onclick="closeModal('announcementModal')">Cancel</button>
+    </form>
+  </div>
+</div>
+
+
+  <!-- Event Modal -->
+  <div id="eventModal" class="modal">
+    <div class="modal-content">
+      <h2>📅 New Event</h2>
+      <form id="eventForm">
+        <div class="form-group">
+          <label for="eventTitle">Title</label>
+          <input type="text" id="eventTitle" required />
+        </div>
+        <div class="form-group">
+          <label for="eventDate">Date</label>
+          <input type="date" id="eventDate" required />
+        </div>
+        <button type="submit" class="btn btn-primary">Save</button>
+        <button type="button" class="btn btn-secondary" onclick="closeModal('eventModal')">Cancel</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Install Button -->
+  <button id="installBtn">📲 Install App</button>
+</div>
+
+<!-- JavaScript -->
+<script type="module" src="./app.js"></script>
 </body>
 </html>
