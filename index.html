@@ -67,7 +67,6 @@
         <div class="stat-label">Upcoming Events</div>
       </div>
     </div>
-    <div class="dashboard-grid" id="dashboardGroups"></div>
   </div>
 
   <!-- Groups -->
@@ -77,10 +76,30 @@
       <button class="btn btn-primary" onclick="showAddGroupModal()">➕ Add Group</button>
     </div>
     <div id="groupsList" class="dashboard-grid"></div>
-    <div id="groupDetails" style="display: none;"></div>
   </div>
 
-  
+  <!-- Attendance -->
+  <div id="attendance" class="tab-content">
+    <div class="section-header">
+      <h2 class="section-title">Attendance Tracking</h2>
+      <button class="btn btn-primary" onclick="showAttendanceModal()">📝 Mark Attendance</button>
+    </div>
+    <div class="content-card">
+      <label for="attendanceGroupSelect">Select Group</label>
+      <select id="attendanceGroupSelect"></select>
+      <div id="attendanceMembersList" style="margin-top:10px;"></div>
+    </div>
+  </div>
+
+  <!-- Contributions -->
+  <div id="contributions" class="tab-content">
+    <div class="section-header">
+      <h2 class="section-title">Contributions & Giving</h2>
+      <button class="btn btn-primary" onclick="showContributionModal()">💰 Record Contribution</button>
+    </div>
+    <div id="contributionsList" class="content-card"></div>
+  </div>
+
   <!-- Announcements -->
   <div id="announcements" class="tab-content">
     <div class="section-header">
@@ -90,6 +109,98 @@
     <div id="announcementsList" class="content-card"></div>
   </div>
 
+  <!-- Events -->
+  <div id="events" class="tab-content">
+    <div class="section-header">
+      <h2 class="section-title">Events & Reminders</h2>
+      <button class="btn btn-primary" onclick="showEventModal()">📅 Add Event</button>
+    </div>
+    <div id="eventsList" class="content-card"></div>
+  </div>
+
+  <!-- Modals -->
+
+  <!-- Add Group Modal -->
+  <div id="addGroupModal" class="modal">
+    <div class="modal-content">
+      <h2>➕ New Group</h2>
+      <form id="addGroupForm">
+        <div class="form-group">
+          <label for="groupName">Group Name</label>
+          <input type="text" id="groupName" required />
+        </div>
+        <div class="form-group">
+          <label for="groupLeader">Leader Name</label>
+          <input type="text" id="groupLeader" />
+        </div>
+        <div class="form-group">
+          <label for="leaderPhone">Leader Phone</label>
+          <input type="text" id="leaderPhone" />
+        </div>
+        <button type="submit" class="btn btn-primary">Save</button>
+        <button type="button" class="btn btn-secondary" onclick="closeModal('addGroupModal')">Cancel</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Member Modal -->
+  <div id="addMemberModal" class="modal">
+    <div class="modal-content">
+      <h2>➕ Add Member</h2>
+      <form id="addMemberForm">
+        <div class="form-group">
+          <label for="memberName">Member Name</label>
+          <input type="text" id="memberName" required />
+        </div>
+        <div class="form-group">
+          <label for="memberPhone">Phone</label>
+          <input type="text" id="memberPhone" />
+        </div>
+        <button type="submit" class="btn btn-primary">Save</button>
+        <button type="button" class="btn btn-secondary" onclick="closeModal('addMemberModal')">Cancel</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Attendance Modal -->
+  <div id="attendanceModal" class="modal">
+    <div class="modal-content">
+      <h2>📝 Mark Attendance</h2>
+      <form id="attendanceForm">
+        <div class="form-group">
+          <label for="attendanceGroupModel">Select Group</label>
+          <select id="attendanceGroupModel"></select>
+        </div>
+        <div id="attendanceMembersModel" class="form-group"></div>
+        <button type="submit" class="btn btn-primary">Save</button>
+        <button type="button" class="btn btn-secondary" onclick="closeModal('attendanceModal')">Cancel</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Contribution Modal -->
+  <div id="contributionModal" class="modal">
+    <div class="modal-content">
+      <h2>💰 Record Contribution</h2>
+      <form id="contributionForm">
+        <div class="form-group">
+          <label for="memberGroup">Group</label>
+          <select id="memberGroup"></select>
+        </div>
+        <div class="form-group">
+          <label for="contributionMember">Member</label>
+          <select id="contributionMember"></select>
+        </div>
+        <div class="form-group">
+          <label for="contributionAmount">Amount (KSH)</label>
+          <input type="number" id="contributionAmount" required />
+        </div>
+        <button type="submit" class="btn btn-primary">Save</button>
+        <button type="button" class="btn btn-secondary" onclick="closeModal('contributionModal')">Cancel</button>
+      </form>
+    </div>
+  </div>
+
   <!-- Announcement Modal -->
   <div id="announcementModal" class="modal">
     <div class="modal-content">
@@ -97,133 +208,46 @@
       <form id="announcementForm">
         <div class="form-group">
           <label for="announcementTitle">Title</label>
-          <input type="text" id="announcementTitle" name="announcementTitle" required />
+          <input type="text" id="announcementTitle" required />
         </div>
         <div class="form-group">
           <label for="announcementMessage">Message</label>
-          <textarea id="announcementMessage" name="announcementMessage" required></textarea>
-        </div>
-        <div class="form-group">
-          <label for="announcementTarget">Target Group</label>
-          <select id="announcementTarget" name="announcementTarget" required>
-            <option value="all">All Members</option>
-            <option value="leaders">Leaders</option>
-            <option value="group">Specific Group</option>
-          </select>
+          <textarea id="announcementMessage" required></textarea>
         </div>
         <div class="form-group">
           <label for="announcementDate">Date</label>
-          <input type="date" id="announcementDate" name="announcementDate" required />
+          <input type="date" id="announcementDate" required />
         </div>
         <button type="submit" class="btn btn-primary">Save</button>
         <button type="button" class="btn btn-secondary" onclick="closeModal('announcementModal')">Cancel</button>
       </form>
     </div>
   </div>
-<!-- Attendance -->
-<div id="attendance" class="tab-content">
-  <div class="section-header">
-    <h2 class="section-title">Attendance Tracking</h2>
-    <button class="btn btn-primary" onclick="showAttendanceModal()">📝 Mark Attendance</button>
-  </div>
-  <div class="content-card">
-    <label for="attendanceGroup">Select Group</label>
-    <select id="attendanceGroupSelect"></select>
-    <div id="attendanceMembersList" style="margin-top:10px;"></div>
-  </div>
-</div>
 
-<!-- Attendance Modal -->
-<div id="attendanceModal" class="modal">
-  <div class="modal-content">
-    <h2>📝 Mark Attendance</h2>
-    <form id="attendanceForm">
-      <div class="form-group">
-        <label for="attendanceGroup">Group</label>
-        <select id="attendanceGroupModel"></select>
-      </div>
-      <div id="attendanceMembersModel" class="form-group"></div>
-      <button type="submit" class="btn btn-primary">Save</button>
-      <button type="button" class="btn btn-secondary" onclick="closeModal('attendanceModal')">Cancel</button>
-    </form>
+  <!-- Event Modal -->
+  <div id="eventModal" class="modal">
+    <div class="modal-content">
+      <h2>📅 New Event</h2>
+      <form id="eventForm">
+        <div class="form-group">
+          <label for="eventTitle">Title</label>
+          <input type="text" id="eventTitle" required />
+        </div>
+        <div class="form-group">
+          <label for="eventDate">Date</label>
+          <input type="date" id="eventDate" required />
+        </div>
+        <button type="submit" class="btn btn-primary">Save</button>
+        <button type="button" class="btn btn-secondary" onclick="closeModal('eventModal')">Cancel</button>
+      </form>
+    </div>
   </div>
-</div>
 
-<!-- Contributions -->
-<div id="contributions" class="tab-content">
-  <div class="section-header">
-    <h2 class="section-title">Contributions & Giving</h2>
-    <button class="btn btn-primary" onclick="showContributionModal()">💰 Record Contribution</button>
-  </div>
-  <div id="contributionsList" class="content-card"></div>
+  <!-- Install Button -->
+  <button id="installBtn">📲 Install App</button>
 </div>
-
-<!-- Contribution Modal -->
-<div id="contributionModal" class="modal">
-  <div class="modal-content">
-    <h2>💰 Record Contribution</h2>
-    <form id="contributionForm">
-      <div class="form-group">
-        <label for="memberGroup">Group</label>
-        <select id="memberGroup"></select>
-      </div>
-      <div class="form-group">
-        <label for="contributionMember">Member</label>
-        <select id="contributionMember"></select>
-      </div>
-      <div class="form-group">
-        <label for="contributionAmount">Amount (KSH)</label>
-        <input type="number" id="contributionAmount" name="contributionAmount" required />
-      </div>
-      <button type="submit" class="btn btn-primary">Save</button>
-      <button type="button" class="btn btn-secondary" onclick="closeModal('contributionModal')">Cancel</button>
-    </form>
-  </div>
-</div>
-
-<!-- Events -->
-<div id="events" class="tab-content">
-  <div class="section-header">
-    <h2 class="section-title">Events & Reminders</h2>
-    <button class="btn btn-primary" onclick="showEventModal()">📅 Add Event</button>
-  </div>
-  <div id="eventsList" class="content-card"></div>
-</div>
-
-<!-- Event Modal -->
-<div id="eventModal" class="modal">
-  <div class="modal-content">
-    <h2>📅 New Event</h2>
-    <form id="eventForm">
-      <div class="form-group">
-        <label for="eventTitle">Title</label>
-        <input type="text" id="eventTitle" name="eventTitle" required />
-      </div>
-      <div class="form-group">
-        <label for="eventDate">Date</label>
-        <input type="date" id="eventDate" name="eventDate" required />
-      </div>
-      <div class="form-group">
-        <label for="eventTarget">Target Group</label>
-        <select id="eventTarget" name="eventTarget" required>
-          <option value="all">All Members</option>
-          <option value="leaders">Leaders</option>
-          <option value="group">Specific Group</option>
-        </select>
-      </div>
-      <button type="submit" class="btn btn-primary">Save</button>
-      <button type="button" class="btn btn-secondary" onclick="closeModal('eventModal')">Cancel</button>
-    </form>
-  </div>
-</div>
-
- 
-<!-- Install Button -->
-<button id="installBtn">📲 Install App</button>
-<button id="forceInstallBtn">Force Install (Test)</button>
 
 <!-- JavaScript -->
 <script type="module" src="./app.js"></script>
-
 </body>
 </html>
