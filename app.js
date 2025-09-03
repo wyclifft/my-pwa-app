@@ -168,38 +168,48 @@ document.getElementById("attendanceForm")?.addEventListener("submit", async e =>
 }
 );
 loadAttendanceGroups();
-// ----------------------
+/// ----------------------
 // Contributions
 // ----------------------
 async function loadContributions() {
   try {
-    // Fetch contributions along with group and member names
-    const { data: contributions, error } = await supabase
+    // Fetch contributions
+    const { data: contributions, error: contributionsError } = await supabase
       .from("contributions")
-      .select(`
-        id,
-        amount,
-        type,
-        created_at,
-        groups!inner(name),
-        members!inner(name)
-      `)
-      .order("created_at", { ascending: false });
+      .select("id, amount, type, date, member_id")
+      .order("date", { ascending: false });
 
-    if (error) throw error;
+    if (contributionsError) throw contributionsError;
+
+    // Fetch members
+    const { data: members, error: membersError } = await supabase
+      .from("members")
+      .select("id, name, group_id");
+
+    if (membersError) throw membersError;
+
+    // Fetch groups
+    const { data: groups, error: groupsError } = await supabase
+      .from("groups")
+      .select("id, name");
+
+    if (groupsError) throw groupsError;
 
     const container = document.getElementById("contributionsList");
     if (!container) return;
     container.innerHTML = "";
 
-    contributions?.forEach(c => {
+    contributions.forEach(c => {
+      const member = members.find(m => m.id === c.member_id);
+      const group = groups.find(g => g.id === member?.group_id);
+
       const div = document.createElement("div");
       div.className = "content-card";
       div.innerHTML = `
-        <strong>${c.members?.name || "Unknown Member"}</strong> from 
-        <em>${c.groups?.name || "Unknown Group"}</em> contributed 
+        <strong>${member?.name || "Unknown Member"}</strong> from 
+        <em>${group?.name || "Unknown Group"}</em> contributed 
         <strong>KSH ${Number(c.amount).toLocaleString()}</strong><br>
-        <small>Type: ${c.type || "N/A"} | ${new Date(c.created_at).toLocaleDateString()}</small>
+        <small>Type: ${c.type || "N/A"} | ${new Date(c.date).toLocaleDateString()}</small>
       `;
       container.appendChild(div);
     });
@@ -215,23 +225,21 @@ window.loadContributions = loadContributions;
 document.getElementById("contributionForm")?.addEventListener("submit", async e => {
   e.preventDefault();
 
-  const groupId = document.getElementById("memberGroup")?.value;
   const memberId = document.getElementById("contributionMember")?.value;
   const type = document.getElementById("contributionType")?.value;
   const amount = parseFloat(document.getElementById("contributionAmount")?.value);
 
   // Validate input
-  if (!groupId || !memberId || !type || !amount) {
+  if (!memberId || !type || !amount) {
     return alert("All fields are required");
   }
 
   try {
     const { error } = await supabase.from("contributions").insert([{
       member_id: memberId,
-      group_id: groupId,
       amount,
-      type, // ensure this matches your DB column
-      created_at: new Date().toISOString()
+      type,
+      date: new Date().toISOString()
     }]);
 
     if (error) throw error;
