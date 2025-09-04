@@ -261,31 +261,53 @@ document.getElementById("memberGroup")?.addEventListener("change", e => loadMemb
 // Events
 // ----------------------
 async function loadEvents() {
-  const { data: events } = await supabase.from("events").select("*").order("date", { ascending: true });
+  const { data: events } = await supabase
+    .from("events")
+    .select("*")
+    .order("date", { ascending: true });
+
   const container = document.getElementById("eventsList");
   if (!container) return;
   container.innerHTML = "";
+
   events?.forEach(ev => {
     const div = document.createElement("div");
     div.className = "content-card";
-    div.innerHTML = `<strong>${ev.title}</strong> for <em>${ev.target || "All Members"}</em><br><small>${new Date(ev.date).toLocaleDateString()}</small>`;
+    div.innerHTML = `
+      <strong>${ev.title}</strong> for <em>${ev.target || "All Members"}</em><br>
+      <p>${ev.description}</p>
+      <small>${new Date(ev.date).toLocaleDateString()} at ${ev.time}</small>
+    `;
     container.appendChild(div);
   });
 }
+
 window.loadEvents = loadEvents;
 
 document.getElementById("eventForm")?.addEventListener("submit", async e => {
   e.preventDefault();
+
   const title = document.getElementById("eventTitle")?.value;
+  const description = document.getElementById("eventDescription")?.value;
   const date = document.getElementById("eventDate")?.value;
+  const time = document.getElementById("eventTime")?.value;
   const target = document.getElementById("eventTarget")?.value;
-  if (!title || !date || !target) return alert("All fields are required.");
-  const { error } = await supabase.from("events").insert([{ title, date, target }]);
+
+  if (!title || !description || !date || !time || !target) {
+    return alert("All fields are required.");
+  }
+
+  const { error } = await supabase.from("events").insert([
+    { title, description, date, time, target }
+  ]);
+
   if (error) return alert("Failed to add event: " + error.message);
+
   alert("Event added!");
   closeModal("eventModal");
   loadEvents();
 });
+
 
 // ----------------------
 // Announcements (with notifications)
@@ -348,3 +370,16 @@ window.addEventListener("DOMContentLoaded", () => {
   loadContributions();
   loadEvents();
 });
+async function sendSMS() {
+  const response = await fetch("http://localhost:5000/send-sms", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      phoneNumbers: ["+2547XXXXXXXX"],
+      message: "Hello from MCK FIRST SERVISE MEN APP"
+    })
+  });
+
+  const result = await response.json();
+  console.log(result);
+}

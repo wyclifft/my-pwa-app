@@ -109,14 +109,26 @@
     <div id="announcementsList" class="content-card"></div>
   </div>
 
-  <!-- Events -->
-  <div id="events" class="tab-content">
-    <div class="section-header">
-      <h2 class="section-title">Events & Reminders</h2>
-      <button class="btn btn-primary" onclick="showEventModal()">📅 Add Event</button>
-    </div>
-    <div id="eventsList" class="content-card"></div>
-  </div>
+  <!-- Event Modal Form -->
+<form id="eventForm">
+  <label>Title</label>
+  <input type="text" id="eventTitle" required>
+
+  <label>Description</label>
+  <textarea id="eventDescription" required></textarea>
+
+  <label>Date</label>
+  <input type="date" id="eventDate" required>
+
+  <label>Time</label>
+  <input type="time" id="eventTime" required>
+
+  <label>Target</label>
+  <input type="text" id="eventTarget" placeholder="e.g. All Members" required>
+
+  <button type="submit">Save Event</button>
+</form>
+
 
   <!-- Modals -->
 
