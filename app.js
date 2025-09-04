@@ -336,11 +336,10 @@ async function loadEvents() {
 }
 window.loadEvents = loadEvents;
 
-document.getElementById("eventForm")?.addEventListener("submit", async (e) => {
+document.getElementById("eventForm")?.addEventListener("submit", async e => {
   e.preventDefault();
-
   const title = document.getElementById("eventTitle")?.value;
-  const description = document.getElementById("eventDescription")?.value;
+  const description = document.getElementById("eventDescription")?.value; // ✅ Added description
   const date = document.getElementById("eventDate")?.value;
   const time = document.getElementById("eventTime")?.value;
   const target = document.getElementById("eventTarget")?.value;
@@ -349,16 +348,25 @@ document.getElementById("eventForm")?.addEventListener("submit", async (e) => {
     return alert("All fields are required.");
   }
 
-  const { error } = await supabase
-    .from("events")
-    .insert([{ title, description, date, time, target }]);
-
+  const { error } = await supabase.from("events").insert([{ title, description, date, time, target }]);
   if (error) return alert("Failed to add event: " + error.message);
 
   alert("Event added!");
   closeModal("eventModal");
   loadEvents();
+
+  // 🔔 Show local push notification
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.ready.then((registration) => {
+      registration.showNotification("📅 New Event", {
+        body: `${title} on ${new Date(date).toLocaleDateString()} at ${time}`,
+        icon: "/icons/icon-192.png",
+        badge: "/icons/icon-192.png"
+      });
+    });
+  }
 });
+
 
 // ----------------------
 // Announcements (with notifications)
@@ -396,22 +404,33 @@ async function loadAnnouncements() {
 }
 window.loadAnnouncements = loadAnnouncements;
 
-document
-  .getElementById("announcementForm")
-  ?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const title = document.getElementById("announcementTitle")?.value.trim();
-    const message = document.getElementById("announcementMessage")?.value.trim();
-    const date = document.getElementById("announcementDate")?.value;
-    if (!title || !message || !date) return alert("All fields required");
-    const { error } = await supabase
-      .from("announcements")
-      .insert([{ title, message, date }]);
-    if (error) return alert("Failed to add announcement: " + error.message);
-    alert("Announcement added!");
-    closeModal("announcementModal");
-    loadAnnouncements();
-  });
+document.getElementById("announcementForm")?.addEventListener("submit", async e => {
+  e.preventDefault();
+  const title = document.getElementById("announcementTitle")?.value;
+  const message = document.getElementById("announcementMessage")?.value;
+  const date = document.getElementById("announcementDate")?.value;
+
+  if (!title || !message || !date) return alert("All fields are required.");
+
+  const { error } = await supabase.from("announcements").insert([{ title, message, date }]);
+  if (error) return alert("Failed to add announcement: " + error.message);
+
+  alert("Announcement added!");
+  closeModal("announcementModal");
+  loadAnnouncements();
+
+  // 🔔 Show local push notification
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.ready.then((registration) => {
+      registration.showNotification("📢 New Announcement", {
+        body: `${title}: ${message}`,
+        icon: "/icons/icon-192.png",
+        badge: "/icons/icon-192.png"
+      });
+    });
+  }
+});
+
 
 // ----------------------
 // Live Updates
