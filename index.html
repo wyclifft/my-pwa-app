@@ -109,115 +109,91 @@
     <div id="announcementsList" class="content-card"></div>
   </div>
 
-  <!-- Event Modal Form -->
-<form id="eventForm">
-  <label>Title</label>
-  <input type="text" id="eventTitle" required>
-
-  <label>Description</label>
-  <textarea id="eventDescription" required></textarea>
-
-  <label>Date</label>
-  <input type="date" id="eventDate" required>
-
-  <label>Time</label>
-  <input type="time" id="eventTime" required>
-
-  <label>Target</label>
-  <input type="text" id="eventTarget" placeholder="e.g. All Members" required>
-
-  <button type="submit">Save Event</button>
-</form>
-
-
-  <!-- Modals -->
-
-  <!-- Add Group Modal -->
-  <div id="addGroupModal" class="modal">
-    <div class="modal-content">
-      <h2>➕ New Group</h2>
-      <form id="addGroupForm">
-        <div class="form-group">
-          <label for="groupName">Group Name</label>
-          <input type="text" id="groupName" required />
-        </div>
-        <div class="form-group">
-          <label for="groupLeader">Leader Name</label>
-          <input type="text" id="groupLeader" />
-        </div>
-        <div class="form-group">
-          <label for="leaderPhone">Leader Phone</label>
-          <input type="text" id="leaderPhone" />
-        </div>
-        <button type="submit" class="btn btn-primary">Save</button>
-        <button type="button" class="btn btn-secondary" onclick="closeModal('addGroupModal')">Cancel</button>
-      </form>
+  <!-- Events -->
+  <div id="events" class="tab-content">
+    <div class="section-header">
+      <h2 class="section-title">Events & Reminders</h2>
+      <button class="btn btn-primary" onclick="showEventModal()">📅 Add Event</button>
     </div>
+    <div id="eventsList" class="content-card"></div>
   </div>
+</div>
 
-  <!-- Add Member Modal -->
-  <div id="addMemberModal" class="modal">
-    <div class="modal-content">
-      <h2>➕ Add Member</h2>
-      <form id="addMemberForm">
-        <div class="form-group">
-          <label for="memberName">Member Name</label>
-          <input type="text" id="memberName" required />
-        </div>
-        <div class="form-group">
-          <label for="memberPhone">Phone</label>
-          <input type="text" id="memberPhone" />
-        </div>
-        <button type="submit" class="btn btn-primary">Save</button>
-        <button type="button" class="btn btn-secondary" onclick="closeModal('addMemberModal')">Cancel</button>
-      </form>
-    </div>
+<!-- ------------------ Modals ------------------ -->
+
+<!-- Add Group Modal -->
+<div id="addGroupModal" class="modal">
+  <div class="modal-content">
+    <h2>➕ New Group</h2>
+    <form id="addGroupForm">
+      <div class="form-group">
+        <label for="groupName">Group Name</label>
+        <input type="text" id="groupName" required />
+      </div>
+      <div class="form-group">
+        <label for="groupLeader">Leader Name</label>
+        <input type="text" id="groupLeader" />
+      </div>
+      <div class="form-group">
+        <label for="leaderPhone">Leader Phone</label>
+        <input type="text" id="leaderPhone" />
+      </div>
+      <button type="submit" class="btn btn-primary">Save</button>
+      <button type="button" class="btn btn-secondary" onclick="closeModal('addGroupModal')">Cancel</button>
+    </form>
   </div>
+</div>
 
-  <!-- Attendance Modal -->
+<!-- Add Member Modal -->
+<div id="addMemberModal" class="modal">
+  <div class="modal-content">
+    <h2>➕ Add Member</h2>
+    <form id="addMemberForm">
+      <div class="form-group">
+        <label for="memberName">Member Name</label>
+        <input type="text" id="memberName" required />
+      </div>
+      <div class="form-group">
+        <label for="memberPhone">Phone</label>
+        <input type="text" id="memberPhone" />
+      </div>
+      <button type="submit" class="btn btn-primary">Save</button>
+      <button type="button" class="btn btn-secondary" onclick="closeModal('addMemberModal')">Cancel</button>
+    </form>
+  </div>
+</div>
+
+<!-- Attendance Modal -->
 <div id="attendanceModal" class="modal">
   <div class="modal-content">
     <h2>📝 Mark Attendance</h2>
     <form id="attendanceForm">
-      <!-- Group Selection -->
       <div class="form-group">
         <label for="attendanceGroupModel">Select Group</label>
         <select id="attendanceGroupModel">
           <option value="">-- Loading groups... --</option>
         </select>
       </div>
-
-      <!-- Members Checkboxes -->
-      <div id="attendanceMembersModel" class="form-group">
-        <!-- Checkboxes for members will be inserted here dynamically -->
-      </div>
-
-      <!-- Submit -->
+      <div id="attendanceMembersModel" class="form-group"></div>
       <button type="submit" class="btn btn-primary">Save</button>
       <button type="button" class="btn btn-secondary" onclick="closeModal('attendanceModal')">Cancel</button>
     </form>
   </div>
 </div>
 
-
-  <!-- Contribution Modal -->
+<!-- Contribution Modal -->
 <div id="contributionModal" class="modal">
   <div class="modal-content">
     <h2>💰 Record Contribution</h2>
     <form id="contributionForm">
-      <!-- Group Selection -->
       <div class="form-group">
         <label for="memberGroup">Group</label>
         <select id="memberGroup"></select>
       </div>
-
-      <!-- Member Selection -->
       <div class="form-group">
         <label for="contributionMember">Member</label>
         <select id="contributionMember"></select>
       </div>
-
-      <!-- Contribution Type -->
       <div class="form-group">
         <label for="contributionType">Type</label>
         <select id="contributionType" required>
@@ -228,21 +204,17 @@
           <option value="Other">Other</option>
         </select>
       </div>
-
-      <!-- Amount -->
       <div class="form-group">
         <label for="contributionAmount">Amount (KSH)</label>
         <input type="number" id="contributionAmount" required />
       </div>
-
-      <!-- Buttons -->
       <button type="submit" class="btn btn-primary">Save</button>
       <button type="button" class="btn btn-secondary" onclick="closeModal('contributionModal')">Cancel</button>
     </form>
   </div>
 </div>
 
-  <!-- Announcement Modal -->
+<!-- Announcement Modal -->
 <div id="announcementModal" class="modal">
   <div class="modal-content">
     <h2>📢 New Announcement</h2>
@@ -265,25 +237,36 @@
   </div>
 </div>
 
-
-  <!-- Event Modal -->
-  <div id="eventModal" class="modal">
-    <div class="modal-content">
-      <h2>📅 New Event</h2>
-      <form id="eventForm">
-        <div class="form-group">
-          <label for="eventTitle">Title</label>
-          <input type="text" id="eventTitle" required />
-        </div>
-        <div class="form-group">
-          <label for="eventDate">Date</label>
-          <input type="date" id="eventDate" required />
-        </div>
-        <button type="submit" class="btn btn-primary">Save</button>
-        <button type="button" class="btn btn-secondary" onclick="closeModal('eventModal')">Cancel</button>
-      </form>
-    </div>
+<!-- Event Modal -->
+<div id="eventModal" class="modal">
+  <div class="modal-content">
+    <h2>📅 New Event</h2>
+    <form id="eventForm">
+      <div class="form-group">
+        <label for="eventTitle">Title</label>
+        <input type="text" id="eventTitle" required />
+      </div>
+      <div class="form-group">
+        <label for="eventDescription">Description</label>
+        <textarea id="eventDescription" required></textarea>
+      </div>
+      <div class="form-group">
+        <label for="eventDate">Date</label>
+        <input type="date" id="eventDate" required />
+      </div>
+      <div class="form-group">
+        <label for="eventTime">Time</label>
+        <input type="time" id="eventTime" required />
+      </div>
+      <div class="form-group">
+        <label for="eventTarget">Target</label>
+        <input type="text" id="eventTarget" placeholder="e.g. All Members" required />
+      </div>
+      <button type="submit" class="btn btn-primary">Save</button>
+      <button type="button" class="btn btn-secondary" onclick="closeModal('eventModal')">Cancel</button>
+    </form>
   </div>
+</div>
 
 <!-- JavaScript -->
 <script type="module" src="./app.js"></script>
