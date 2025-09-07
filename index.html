@@ -114,15 +114,6 @@
     <div id="contributionsList" class="content-card"></div>
   </div>
 
-  <!-- Birthdays Tab -->
-  <div id="birthdays" class="tab-content">
-    <div class="section-header">
-      <h2 class="section-title">Birthday Alerts</h2>
-      <button class="btn btn-primary" onclick="showBirthdayModal()">🎂 Add Birthday</button>
-    </div>
-    <div id="birthdaysList"></div>
-  </div>
-
   <!-- Contribution Modal -->
   <div id="contributionModal" class="modal">
     <div class="modal-content">
@@ -190,7 +181,10 @@
   <button id="forceInstallBtn">Force Install (Test)</button>
   <button id="installBtn">📲 Install App</button>
 
+  <!-- Supabase App Script -->
   <script type="module" src="app.js"></script>
+
+  <!-- Service Worker -->
   <script>
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
@@ -201,10 +195,10 @@
     }
   </script>
 
+  <!-- Install Prompt -->
   <script>
     let deferredPrompt;
     const installBtn = document.getElementById("installBtn");
-
     installBtn.style.display = "none";
 
     window.addEventListener("beforeinstallprompt", (e) => {

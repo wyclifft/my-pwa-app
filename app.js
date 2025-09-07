@@ -1,164 +1,166 @@
+// app.js
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-// ==============================
-// Supabase client setup
-// ==============================
-const SUPABASE_URL = "https://zlslqpsnstvmfjnrqeeew.supabase.co"; // replace if wrong
-const SUPABASE_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpsc2xxcHNuc3R2bWZqbnJxZWV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM4OTAyMTMsImV4cCI6MjA2OTQ2NjIxM30.oK2aiMsHOKS50TVFHppAudWqikQkJN8nizXFcnT340w"; // replace with your anon key
+// --- Supabase Init ---
+const SUPABASE_URL = "https://wyocoumpglwroyzbrvsb.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind5b2NvdW1wZ2x3cm95emJydnNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY2NTE0ODgsImV4cCI6MjA3MjIyNzQ4OH0.ghId1cDHHfyR9C_VmSCGxcE-aqW7kfbbJQ_F7aWan70";
+
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// ==============================
-// Tab switching
-// ==============================
-function showTab(tabId) {
-  document.querySelectorAll(".tab-content").forEach((tab) => {
-    tab.classList.add("hidden");
-  });
-  document.getElementById(tabId).classList.remove("hidden");
+// --- Helpers ---
+function showNotification(msg, isError = false) {
+  const notification = document.getElementById("notification");
+  notification.textContent = msg;
+  notification.style.background = isError ? "#dc3545" : "#28a745";
+  notification.style.display = "block";
+  setTimeout(() => (notification.style.display = "none"), 3000);
 }
 
-// ==============================
-// Modal handling
-// ==============================
-function showContributionModal() {
-  document.getElementById("contributionModal").classList.remove("hidden");
-}
-function closeModal() {
-  document.getElementById("contributionModal").classList.add("hidden");
-}
-
-// ==============================
-// Load groups
-// ==============================
+// --- Groups ---
 async function loadGroups() {
-  const groupSelect = document.getElementById("groupSelect");
-  groupSelect.innerHTML = `<option value="">Loading...</option>`;
+  try {
+    const { data, error } = await supabase.from("groups").select("id, name");
+    if (error) throw error;
 
-  const { data, error } = await supabase.from("groups").select("id, name");
+    const groupSelect = document.getElementById("contributionGroup");
+    if (!groupSelect) return;
 
-  if (error) {
-    console.error("loadGroups error:", error);
-    groupSelect.innerHTML = `<option value="">Error loading groups</option>`;
-    return;
-  }
+    groupSelect.innerHTML = `<option value="">Select group</option>`;
+    data.forEach(g => {
+      const opt = document.createElement("option");
+      opt.value = g.id;
+      opt.textContent = g.name;
+      groupSelect.appendChild(opt);
+    });
 
-  if (!data || data.length === 0) {
-    groupSelect.innerHTML = `<option value="">No groups found</option>`;
-    return;
-  }
-
-  groupSelect.innerHTML = data
-    .map((g) => `<option value="${g.id}">${g.name}</option>`)
-    .join("");
-}
-
-// ==============================
-// Load contributions
-// ==============================
-async function loadContributions() {
-  const contributionsList = document.getElementById("contributionsList");
-  contributionsList.innerHTML = `<li class="p-2">Loading...</li>`;
-
-  const { data, error } = await supabase
-    .from("contributions")
-    .select(
-      `
-      id,
-      amount,
-      type,
-      date,
-      notes,
-      members (
-        id, name,
-        groups (id, name)
-      )
-    `
-    )
-    .order("date", { ascending: false });
-
-  if (error) {
-    console.error("loadContributions error:", error);
-    contributionsList.innerHTML = `<li class="p-2 text-red-500">Error loading contributions</li>`;
-    return;
-  }
-
-  if (!data || data.length === 0) {
-    contributionsList.innerHTML = `<li class="p-2">No contributions yet</li>`;
-    return;
-  }
-
-  contributionsList.innerHTML = data
-    .map(
-      (c) => `
-      <li class="p-2 border-b">
-        <div class="font-semibold">${c.members?.name || "Unknown member"}</div>
-        <div>Group: ${c.members?.groups?.name || "No group"}</div>
-        <div>Amount: ${c.amount}</div>
-        <div>Type: ${c.type}</div>
-        <div>Date: ${c.date}</div>
-        ${
-          c.notes
-            ? `<div class="text-sm text-gray-600">Notes: ${c.notes}</div>`
-            : ""
-        }
-      </li>
-    `
-    )
-    .join("");
-}
-
-// ==============================
-// Contribution form submission
-// ==============================
-document
-  .getElementById("contributionForm")
-  ?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const memberId = document.getElementById("memberSelect").value;
-    const amount = document.getElementById("amount").value;
-    const type = document.getElementById("type").value;
-    const date = document.getElementById("date").value;
-    const notes = document.getElementById("notes").value;
-
-    if (!memberId || !amount || !type || !date) {
-      alert("Please fill all required fields");
-      return;
+    // Also load dashboard cards
+    const groupsList = document.getElementById("groupsList");
+    if (groupsList) {
+      groupsList.innerHTML = "";
+      data.forEach(g => {
+        groupsList.innerHTML += `
+          <div class="content-card">
+            <h3>${g.name}</h3>
+          </div>`;
+      });
     }
 
-    const { error } = await supabase.from("contributions").insert([
-      {
-        member_id: memberId,
+    document.getElementById("totalGroups").textContent = data.length;
+  } catch (err) {
+    console.error("loadGroups error:", err.message);
+    showNotification("Failed to load groups", true);
+  }
+}
+
+// --- Members ---
+async function loadMembers(groupId) {
+  try {
+    const { data, error } = await supabase
+      .from("members")
+      .select("id, name")
+      .eq("group_id", groupId);
+    if (error) throw error;
+
+    const memberSelect = document.getElementById("contributionMember");
+    if (!memberSelect) return;
+
+    memberSelect.innerHTML = `<option value="">Select member</option>`;
+    data.forEach(m => {
+      const opt = document.createElement("option");
+      opt.value = m.id;
+      opt.textContent = m.name;
+      memberSelect.appendChild(opt);
+    });
+  } catch (err) {
+    console.error("loadMembers error:", err.message);
+    showNotification("Failed to load members", true);
+  }
+}
+
+// --- Contributions ---
+async function loadContributions() {
+  try {
+    const { data, error } = await supabase
+      .from("contributions")
+      .select(`
+        id,
         amount,
         type,
         date,
         notes,
-      },
-    ]);
+        members(id, name, groups(id, name))
+      `)
+      .order("date", { ascending: false });
 
-    if (error) {
-      console.error("Insert error:", error);
-      alert("Error saving contribution");
-      return;
-    }
+    if (error) throw error;
 
-    closeModal();
-    loadContributions();
-  });
+    const list = document.getElementById("contributionsList");
+    if (!list) return;
 
-// ==============================
-// Expose functions for inline HTML
-// ==============================
-window.showTab = showTab;
-window.showContributionModal = showContributionModal;
-window.closeModal = closeModal;
+    list.innerHTML = "";
+    let total = 0;
+    data.forEach(c => {
+      total += c.amount;
+      list.innerHTML += `
+        <div class="content-card">
+          <p><strong>${c.members?.name || "Unknown"}</strong> (${c.members?.groups?.name || "No Group"})</p>
+          <p>💰 ${c.amount} KSH - ${c.type}</p>
+          <p>📅 ${c.date}</p>
+          <p>📝 ${c.notes || ""}</p>
+        </div>`;
+    });
 
-// ==============================
-// Init
-// ==============================
+    document.getElementById("totalContributions").textContent = total;
+  } catch (err) {
+    console.error("loadContributions error:", err.message);
+    showNotification("Failed to load contributions", true);
+  }
+}
+
+// --- Handle Contribution Form ---
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("App initialized!");
   loadGroups();
   loadContributions();
+
+  // When group changes → load members
+  const groupSelect = document.getElementById("contributionGroup");
+  if (groupSelect) {
+    groupSelect.addEventListener("change", e => {
+      if (e.target.value) {
+        loadMembers(e.target.value);
+      }
+    });
+  }
+
+  // Form submit
+  const form = document.getElementById("contributionForm");
+  if (form) {
+    form.addEventListener("submit", async e => {
+      e.preventDefault();
+      const memberId = document.getElementById("contributionMember").value;
+      const amount = parseFloat(document.getElementById("contributionAmount").value);
+      const type = document.getElementById("contributionType").value;
+      const date = document.getElementById("contributionDate").value;
+      const notes = document.getElementById("contributionNotes").value;
+
+      try {
+        const { error } = await supabase.from("contributions").insert([{
+          member_id: memberId,
+          amount,
+          type,
+          date,
+          notes
+        }]);
+        if (error) throw error;
+
+        showNotification("✅ Contribution recorded!");
+        form.reset();
+        closeModal("contributionModal");
+        loadContributions();
+      } catch (err) {
+        console.error("insert error:", err.message);
+        showNotification("Failed to record contribution", true);
+      }
+    });
+  }
 });
