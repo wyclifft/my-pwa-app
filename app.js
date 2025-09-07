@@ -1,141 +1,176 @@
+// app.js
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-const SUPABASE_URL = "https://wyocoumpglwroyzbrvsb.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind5b2NvdW1wZ2x3cm95emJydnNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY2NTE0ODgsImV4cCI6MjA3MjIyNzQ4OH0.ghId1cDHHfyR9C_VmSCGxcE-aqW7kfbbJQ_F7aWan70";
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+// Supabase credentials
+const SUPABASE_URL = "https://zlslqpsnstvmfjnrqeeew.supabase.co"; // replace with yours
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind5b2NvdW1wZ2x3cm95emJydnNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY2NTE0ODgsImV4cCI6MjA3MjIyNzQ4OH0.ghId1cDHHfyR9C_VmSCGxcE-aqW7kfbbJQ_F7aWan70"; // replace with yours
 
-// ---------------- Modal Helpers ----------------
-window.showTab = function(tabName, event) {
-  document.querySelectorAll(".tab-content").forEach(t => t.classList.remove("active"));
-  document.querySelectorAll(".nav-tab").forEach(t => t.classList.remove("active"));
-  document.getElementById(tabName)?.classList.add("active");
-  if (event) event.currentTarget.classList.add("active");
-};
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-window.closeModal = (id) => document.getElementById(id)?.classList.remove("show");
-
-// ---------------- Dashboard Stats ----------------
-async function loadDashboardStats() {
-  const safeSet = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val ?? 0; };
-
-  const { count: groupsCount } = await supabase.from("groups").select("*", { count: "exact", head: true });
-  const { count: membersCount } = await supabase.from("members").select("*", { count: "exact", head: true });
-  const today = new Date().toISOString().split("T")[0];
-  const { count: eventsCount } = await supabase.from("events").select("*", { count: "exact", head: true }).gte("date", today);
-  const { data: contributions } = await supabase.from("contributions").select("amount");
-  const totalContributions = contributions?.reduce((sum, c) => sum + Number(c.amount), 0) || 0;
-
-  safeSet("totalGroups", groupsCount);
-  safeSet("totalMembers", membersCount);
-  safeSet("upcomingEvents", eventsCount);
-  safeSet("totalContributions", totalContributions.toLocaleString());
+// ---------- UI Helpers ----------
+function showNotification(message, type = "success") {
+  const notification = document.getElementById("notification");
+  notification.textContent = message;
+  notification.className = `notification show ${type}`;
+  setTimeout(() => {
+    notification.className = "notification";
+  }, 3000);
 }
 
-// ---------------- Groups ----------------
+function showTab(tabId) {
+  document.querySelectorAll(".tab-content").forEach((tab) => {
+    tab.classList.remove("active");
+  });
+  document.querySelectorAll(".nav-tab").forEach((btn) => {
+    btn.classList.remove("active");
+  });
+  document.getElementById(tabId).classList.add("active");
+  document
+    .querySelector(`.nav-tab[onclick="showTab('${tabId}')"]`)
+    .classList.add("active");
+}
+
+function showContributionModal() {
+  document.getElementById("contributionModal").style.display = "block";
+}
+
+function closeModal(id) {
+  document.getElementById(id).style.display = "none";
+}
+
+// ---------- Load Groups & Members ----------
 async function loadGroups() {
-  const { data: groups, error } = await supabase
-    .from("groups")
-    .select("id,name,leader_name,leader_phone,members(id,name)");
+  const { data, error } = await supabase.from("groups").select("id, name");
+  const groupSelect = document.getElementById("contributionGroup");
 
-  if (error) return console.error(error);
-
-  const list = document.getElementById("groupsList");
-  if (list) {
-    list.innerHTML = "";
-    groups.forEach(g => {
-      const div = document.createElement("div");
-      div.className = "dashboard-card";
-      div.innerHTML = `
-        <div class="card-header">
-          <h3>${g.name}</h3><span>👥 ${g.members?.length || 0} members</span>
-        </div>
-        <div class="card-content">Leader: ${g.leader_name}<br>Phone: ${g.leader_phone}</div>
-        <div class="card-actions">
-          <button class="btn btn-primary" onclick="openAddMemberModal(${g.id})">➕ Add Member</button>
-          <button class="btn btn-secondary" onclick="toggleMembers('ml-${g.id}')">👁 Show Members</button>
-          <button class="btn btn-danger" onclick="deleteGroup(${g.id})">🗑 Remove</button>
-        </div>
-        <div id="ml-${g.id}" class="member-list" style="display:none;margin-top:8px;">
-          ${g.members?.map(m => `<div class="member-item"><span>• ${m.name}</span><button onclick="deleteMember(${m.id})" class="btn btn-sm btn-danger">🗑</button></div>`).join("") || "No members yet"}
-        </div>`;
-      list.appendChild(div);
-    });
+  if (error) {
+    console.error(error);
+    showNotification("Failed to load groups", "error");
+    return;
   }
 
-  // fill selects
-  const gSelects = [document.getElementById("memberGroup"), document.getElementById("attendanceGroup"), document.getElementById("contributionGroup")];
-  gSelects.forEach(sel => {
-    if (sel) {
-      sel.innerHTML = `<option value="">Select group</option>`;
-      groups.forEach(g => {
-        const opt = document.createElement("option");
-        opt.value = g.id; opt.textContent = g.name; sel.appendChild(opt);
-      });
+  groupSelect.innerHTML = `<option value="">Select group</option>`;
+  data.forEach((group) => {
+    groupSelect.innerHTML += `<option value="${group.id}">${group.name}</option>`;
+  });
+}
+
+async function loadMembers(groupId) {
+  const { data, error } = await supabase
+    .from("members")
+    .select("id, name")
+    .eq("group_id", groupId);
+
+  const memberSelect = document.getElementById("contributionMember");
+
+  if (error) {
+    console.error(error);
+    showNotification("Failed to load members", "error");
+    return;
+  }
+
+  memberSelect.innerHTML = `<option value="">Select member</option>`;
+  data.forEach((member) => {
+    memberSelect.innerHTML += `<option value="${member.id}">${member.name}</option>`;
+  });
+}
+
+document
+  .getElementById("contributionGroup")
+  .addEventListener("change", (e) => {
+    const groupId = e.target.value;
+    if (groupId) {
+      loadMembers(groupId);
+    } else {
+      document.getElementById(
+        "contributionMember"
+      ).innerHTML = `<option value="">Select a group first</option>`;
     }
   });
-}
 
-// ---------------- Members for Contributions ----------------
-async function loadMembersForContributions(groupId) {
-  const sel = document.getElementById("contributionMember");
-  if (!sel) return;
-  sel.innerHTML = "";
+// ---------- Save Contribution ----------
+document
+  .getElementById("contributionForm")
+  .addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-  if (!groupId) {
-    sel.innerHTML = `<option value="">Select group first</option>`;
-    return;
-  }
+    const group_id = document.getElementById("contributionGroup").value;
+    const member_id = document.getElementById("contributionMember").value;
+    const amount = parseFloat(document.getElementById("contributionAmount").value);
+    const type = document.getElementById("contributionType").value;
+    const date = document.getElementById("contributionDate").value;
+    const notes = document.getElementById("contributionNotes").value || null;
 
-  const { data: members, error } = await supabase.from("members").select("id,name").eq("group_id", groupId);
-  if (error) return console.error(error);
+    if (!group_id || !member_id || !amount || !type || !date) {
+      showNotification("Please fill all required fields", "error");
+      return;
+    }
 
-  if (!members?.length) {
-    sel.innerHTML = `<option value="">No members in this group</option>`;
-    return;
-  }
-  members.forEach(m => {
-    const opt = document.createElement("option");
-    opt.value = m.id; opt.textContent = m.name; sel.appendChild(opt);
+    const { error } = await supabase.from("contributions").insert([
+      {
+        group_id,
+        member_id,
+        amount,
+        type,
+        date,
+        notes,
+      },
+    ]);
+
+    if (error) {
+      console.error(error);
+      showNotification("Error saving contribution", "error");
+    } else {
+      showNotification("Contribution recorded successfully 🎉");
+      document.getElementById("contributionForm").reset();
+      closeModal("contributionModal");
+      loadContributions();
+    }
   });
+
+// ---------- Load Contributions ----------
+async function loadContributions() {
+  const { data, error } = await supabase
+    .from("contributions")
+    .select(
+      `
+      id, amount, type, date, notes,
+      members(name),
+      groups(name)
+    `
+    )
+    .order("date", { ascending: false });
+
+  const list = document.getElementById("contributionsList");
+
+  if (error) {
+    console.error(error);
+    list.innerHTML = `<p class="error">Failed to load contributions</p>`;
+    return;
+  }
+
+  if (data.length === 0) {
+    list.innerHTML = `<p>No contributions recorded yet.</p>`;
+    return;
+  }
+
+  list.innerHTML = data
+    .map(
+      (c) => `
+    <div class="content-card">
+      <strong>${c.members?.name || "Unknown Member"}</strong> 
+      (${c.groups?.name || "Unknown Group"}) <br>
+      💰 ${c.amount} KSH - ${c.type} <br>
+      📅 ${c.date} <br>
+      📝 ${c.notes || "No notes"}
+    </div>
+  `
+    )
+    .join("");
 }
-document.getElementById("contributionGroup")?.addEventListener("change", e => {
-  loadMembersForContributions(e.target.value);
+
+// ---------- Initialize ----------
+document.addEventListener("DOMContentLoaded", () => {
+  loadGroups();
+  loadContributions();
 });
-
-// ---------------- Delete ----------------
-window.deleteGroup = async(id)=>{ if(confirm("Delete group?")) await supabase.from("groups").delete().eq("id",id); };
-window.deleteMember = async(id)=>{ if(confirm("Delete member?")) await supabase.from("members").delete().eq("id",id); };
-window.deleteEvent = async(id)=>{ if(confirm("Delete event?")) await supabase.from("events").delete().eq("id",id); };
-
-// ---------------- Contribution Form ----------------
-document.getElementById("contributionForm")?.addEventListener("submit", async e=>{
-  e.preventDefault();
-  const member_id=document.getElementById("contributionMember").value,
-        amount=Number(document.getElementById("contributionAmount").value),
-        type=document.getElementById("contributionType").value,
-        date=document.getElementById("contributionDate").value,
-        notes=document.getElementById("contributionNotes").value || "";
-
-  if(!member_id||!amount||!type||!date) return alert("All required fields must be filled");
-
-  const { error } = await supabase.from("contributions").insert([{ member_id, amount, type, date, notes }]);
-  if (error) return alert(error.message);
-
-  closeModal("contributionModal");
-});
-
-// ---------------- Realtime ----------------
-supabase.channel("db-sync")
-  .on("postgres_changes",{event:"*",schema:"public",table:"groups"},()=>{loadGroups();loadDashboardStats();})
-  .on("postgres_changes",{event:"*",schema:"public",table:"members"},()=>{loadGroups();loadDashboardStats();})
-  .on("postgres_changes",{event:"*",schema:"public",table:"events"},()=>{loadDashboardStats();})
-  .on("postgres_changes",{event:"*",schema:"public",table:"contributions"},()=>{loadDashboardStats();})
-  .subscribe();
-
-// ---------------- Init ----------------
-loadDashboardStats();
-loadGroups();
-
-// Helpers
-window.openAddMemberModal=(gid)=>{const sel=document.getElementById("memberGroup");if(sel) sel.value=gid; showAddMemberModal();};
-window.toggleMembers=(id)=>{const el=document.getElementById(id);if(el) el.style.display=el.style.display==="none"?"block":"none";};
