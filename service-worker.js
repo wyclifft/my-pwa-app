@@ -1,4 +1,4 @@
-const CACHE_NAME = "mckmen-cache-v5"; // bump this every deploy
+const CACHE_NAME = "mckmen-cache-v6"; // bump this every deploy
 const urlsToCache = [
   "./",
   "./index.html",
@@ -14,7 +14,7 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache))
   );
-  self.skipWaiting(); // activate immediately
+  self.skipWaiting();
 });
 
 // -----------------------------
@@ -30,13 +30,20 @@ self.addEventListener("activate", (event) => {
       )
     )
   );
-  self.clients.claim(); // take control immediately
+  self.clients.claim();
 });
 
 // -----------------------------
 // Fetch with Cache Fallback
 // -----------------------------
 self.addEventListener("fetch", (event) => {
+  const url = new URL(event.request.url);
+
+  // 👉 Skip Supabase API requests
+  if (url.hostname.includes("supabase.co")) {
+    return;
+  }
+
   event.respondWith(
     fetch(event.request)
       .then((response) => {
