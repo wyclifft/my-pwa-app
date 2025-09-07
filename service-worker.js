@@ -83,14 +83,28 @@ self.addEventListener("push", (event) => {
       data.message = event.data.text();
     }
   }
+
   const title = data.title || "Notification";
   const options = {
     body: data.message || "",
     icon: "/icons/icon-192.png",
     badge: "/icons/icon-192.png",
-    tag: "announcement"
+    tag: "announcement",
+    vibrate: [200, 100, 200],
+    renotify: true,
+    requireInteraction: true
   };
-  event.waitUntil(self.registration.showNotification(title, options));
+
+  // Unified: show notification + tell clients to play sound
+  event.waitUntil((async () => {
+    await self.registration.showNotification(title, options);
+
+    // send a message to all clients to play sound
+    const allClients = await clients.matchAll({ includeUncontrolled: true });
+    allClients.forEach(client => {
+      client.postMessage({ type: "PLAY_NOTIFICATION_SOUND" });
+    });
+  })());
 });
 
 // Notification click

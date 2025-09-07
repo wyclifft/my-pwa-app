@@ -371,23 +371,36 @@ async function requestNotificationPermission() {
 
 async function showPushNotification(title, body) {
   try {
+    const options = {
+      body,
+      icon: "/icons/icon-192.png",
+      badge: "/icons/icon-192.png",
+      vibrate: [200, 100, 200],
+      tag: "announcement",
+      renotify: true,       // allow multiple notifications
+      requireInteraction: true // stay until dismissed
+    };
+
+    // Attempt to show via Service Worker if registered
     if (navigator.serviceWorker && navigator.serviceWorker.getRegistration) {
       const reg = await navigator.serviceWorker.getRegistration();
       if (reg && reg.showNotification) {
-        reg.showNotification(title, {
-          body,
-          icon: "/icons/icon-192.png",
-          badge: "/icons/icon-192.png",
-          tag: "announcement"
-        });
+        reg.showNotification(title, options);
         return;
       }
     }
-    new Notification(title, { body, icon: "/icons/icon-192.png" });
+
+    // fallback for current page
+    new Notification(title, options);
+
+    // optional: play sound manually
+    const audio = new Audio("/sounds/notification.mp3"); // add this file in your project
+    audio.play().catch(err => console.warn("sound play error:", err));
   } catch (err) {
     console.error("showPushNotification error:", err);
   }
 }
+
 
 function subscribeRealtimeAnnouncements() {
   try {
@@ -578,3 +591,10 @@ function openAddAnnouncementModal() {
     }
   });
 }
+
+navigator.serviceWorker.addEventListener("message", (event) => {
+  if (event.data?.type === "PLAY_NOTIFICATION_SOUND") {
+    const audio = new Audio("/sounds/notification.mp3");
+    audio.play().catch(err => console.warn("sound play error:", err));
+  }
+});
