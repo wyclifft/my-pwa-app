@@ -1,39 +1,54 @@
-// test.js - Africa's Talking Sandbox SMS Test with URL-encoded body
+// test.js
+// Node.js v22+ (ESM syntax)
 
-const API_KEY = "atsk_40c7b2389ae792c53da5f60dd0e93d3eb1d6574601ba2e7e8b12a8ce587f7b2ff5c0dbc9";
-const USERNAME = "sandbox"; // Always 'sandbox' in test mode
+import fetch from 'node-fetch'; // Make sure to install: npm install node-fetch
 
-async function sendSMS() {
-  const url = "https://api.sandbox.africastalking.com/version1/messaging";
+const API_TOKEN = "ema9rRSKCCC0Kr80"; // Your SMSala API token
+const ENDPOINT = "MCK";               // Your endpoint name
 
-  // Form data (x-www-form-urlencoded)
-  const params = new URLSearchParams();
-  params.append("username", USERNAME);
-  params.append("to", "+254700000001,+254700000002,+254700000003, +254700000004, +254700000005, +254700000006"); // multiple numbers separated by comma
-  params.append("message", "Hello from Africa’s Talking Sandbox 🚀");
+/**
+ * Send SMS via SMSala
+ * @param {string} to - Single or comma-separated phone numbers (e.g., "254712345678,254723456789")
+ * @param {string} message - The SMS message content
+ */
+async function sendSMS(to, message) {
+  const url = "https://smsala.com/api/sendSMS"; // SMSala API endpoint
+
+  const payload = {
+    endpoint: ENDPOINT,
+    phonenumber: to,
+    textmessage: message
+  };
+
   try {
     const res = await fetch(url, {
       method: "POST",
       headers: {
-        Accept: "application/json",
-        "Content-Type": "application/x-www-form-urlencoded",
-        apiKey: API_KEY
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${API_TOKEN}`
       },
-      body: params
+      body: JSON.stringify(payload)
     });
 
     const text = await res.text();
-    console.log("📩 Raw response:", text);
+    console.log("Raw response:", text);
 
     try {
       const data = JSON.parse(text);
-      console.log("✅ Parsed JSON:", data);
+      console.log("Parsed JSON response:", data);
     } catch {
-      console.log("⚠️ Response was not JSON, check above raw response.");
+      console.warn("Response is not valid JSON:", text);
     }
+
   } catch (err) {
-    console.error("❌ Error:", err.message);
+    console.error("Error sending SMS:", err);
   }
 }
 
-sendSMS();
+// -------- Examples --------
+
+// Single SMS
+sendSMS("254712345678", "Hello from MCK App 🚀");
+
+// Bulk SMS (comma-separated)
+sendSMS("254712345678,254723456789,254701234567", "Reminder: Men’s fellowship this Sunday at 10am 🙏");
