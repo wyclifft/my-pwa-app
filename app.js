@@ -56,7 +56,6 @@ function showModal(title = "", content = "", onConfirm = null) {
 
 // ---------------------- Tab Switching ----------------------
 function activateTab(tabId) {
-  // update page title if exists
   const pageTitle = document.getElementById("page-title");
   if (pageTitle) {
     pageTitle.textContent = tabId.charAt(0).toUpperCase() + tabId.slice(1);
@@ -68,12 +67,11 @@ function activateTab(tabId) {
     }
   });
 
-  // panes:
   document.querySelectorAll(".tab-pane").forEach(p => p.classList.add("hidden"));
   const pane = document.getElementById(`${tabId}-content`);
   if (pane) pane.classList.remove("hidden");
 }
-window.showTab = activateTab; // expose if any inline calls
+window.showTab = activateTab;
 
 document.addEventListener("click", (e) => {
   const tabBtn = e.target.closest("[data-tab]");
@@ -85,25 +83,20 @@ document.addEventListener("click", (e) => {
 });
 
 // ---------------------- Data Loaders ----------------------
-
 async function loadGroups() {
   try {
-    // fetch groups
     const { data: groups, error: groupsErr } = await supabase.from("groups").select("id, name").order("name");
     if (groupsErr) throw groupsErr;
 
-    // fetch members once
     const { data: allMembers, error: membersErr } = await supabase.from("members").select("id, name, group_id").order("name");
     if (membersErr) throw membersErr;
 
-    // group members by group_id
     const membersByGroup = {};
     (allMembers || []).forEach(m => {
       if (!membersByGroup[m.group_id]) membersByGroup[m.group_id] = [];
       membersByGroup[m.group_id].push(m);
     });
 
-    // populate groups list cards
     const groupsList = document.getElementById("groups-list");
     if (groupsList) {
       groupsList.innerHTML = "";
@@ -135,7 +128,6 @@ async function loadGroups() {
         groupsList.appendChild(card);
       });
 
-      // attach handlers
       groupsList.querySelectorAll(".view-members-btn").forEach(btn => {
         btn.addEventListener("click", () => {
           const gid = btn.dataset.groupId;
@@ -169,7 +161,6 @@ async function loadGroups() {
       });
     }
 
-    // contribution group select
     const groupSelect = document.getElementById("contribution-group");
     if (groupSelect) {
       const prevValue = groupSelect.value || "";
@@ -183,7 +174,6 @@ async function loadGroups() {
       if (prevValue) groupSelect.value = prevValue;
     }
 
-    // total groups
     const tg = document.getElementById("total-groups");
     if (tg) tg.textContent = groups.length ?? 0;
 
@@ -377,11 +367,10 @@ async function showPushNotification(title, body) {
       badge: "/icons/icon-192.png",
       vibrate: [200, 100, 200],
       tag: "announcement",
-      renotify: true,       // allow multiple notifications
-      requireInteraction: true // stay until dismissed
+      renotify: true,
+      requireInteraction: true
     };
 
-    // Attempt to show via Service Worker if registered
     if (navigator.serviceWorker && navigator.serviceWorker.getRegistration) {
       const reg = await navigator.serviceWorker.getRegistration();
       if (reg && reg.showNotification) {
@@ -390,17 +379,14 @@ async function showPushNotification(title, body) {
       }
     }
 
-    // fallback for current page
     new Notification(title, options);
 
-    // optional: play sound manually
-    const audio = new Audio("/sounds/notification.mp3"); // add this file in your project
+    const audio = new Audio("/sounds/notification.mp3");
     audio.play().catch(err => console.warn("sound play error:", err));
   } catch (err) {
     console.error("showPushNotification error:", err);
   }
 }
-
 
 function subscribeRealtimeAnnouncements() {
   try {
@@ -421,180 +407,55 @@ function subscribeRealtimeAnnouncements() {
   }
 }
 
+// ---------------------- Web Push / Service Worker ----------------------
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js')
+    .then(() => console.log("Service Worker registered"))
+    .catch(err => console.warn("SW registration failed:", err));
+}
+
+// Optional: subscribe user to Web Push (requires VAPID keys & server)
+async function subscribeUserToPush() {
+  if (!('PushManager' in window)) return;
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    // Use your VAPID public key here
+    const subscription = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array("BKsJ5NPfaLAAU2bhWDvx574TNQRGmbGlgwYtvFxEv2-xX_CK1Dbjajtr9KOGwemVc9kiZYSeQq0-vFhfEAS_Dsc")
+    });
+
+    // Store subscription to Supabase (table: push_subscriptions)
+    await supabase.from("push_subscriptions").insert([{ subscription }]);
+  } catch (err) {
+    console.error("Push subscription failed:", err);
+  }
+}
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  return new Uint8Array([...rawData].map(c => c.charCodeAt(0)));
+}
+
+requestNotificationPermission().then(granted => {
+  if (granted) subscribeUserToPush();
+});
+
 // ---------------------- Init ----------------------
 document.addEventListener("DOMContentLoaded", async () => {
-  const groupSelect = document.getElementById("contribution-group");
-  const memberSelect = document.getElementById("contribution-member");
-  if (groupSelect) {
-    groupSelect.addEventListener("change", (e) => {
-      const gid = e.target.value;
-      if (!gid) {
-        if (memberSelect) {
-          memberSelect.innerHTML = `<option value="">Select Member</option>`;
-          memberSelect.disabled = true;
-        }
-        return;
-      }
-      loadMembersForGroup(gid);
-    });
-  }
+  activateTab("dashboard");
+  await loadGroups();
+  await loadRecentContributions(12);
+  await loadCountsAndTotals();
+  await loadEvents(6);
+  await loadAnnouncements(10);
+  subscribeRealtimeAnnouncements();
 
   const contribForm = document.getElementById("contribution-form");
   if (contribForm) contribForm.addEventListener("submit", handleContributionFormSubmit);
 
-  window.showModal = showModal;
-
-  await loadGroups();
-  await loadCountsAndTotals();
-  await loadRecentContributions(8);
-  await loadEvents(6);
-  await loadAnnouncements(10);
-
-  try {
-    await requestNotificationPermission();
-  } catch (err) {
-    console.warn("Notification permission error:", err);
-  }
-
-  try {
-    subscribeRealtimeAnnouncements();
-  } catch (err) {
-    console.warn("Realtime subscribe failed:", err);
-  }
-
-  document.getElementById("close-modal")?.addEventListener("click", () => document.getElementById("modal-container")?.classList.add("hidden"));
-  document.getElementById("cancel-modal")?.addEventListener("click", () => document.getElementById("modal-container")?.classList.add("hidden"));
-
-  activateTab("dashboard");
-
-  // Bind extra add buttons if they exist
-  document.getElementById("add-group-btn")?.addEventListener("click", openAddGroupModal);
-  document.getElementById("add-event-btn")?.addEventListener("click", openAddEventModal);
-  document.getElementById("add-announcement-btn")?.addEventListener("click", openAddAnnouncementModal);
-});
-
-// ---------------------- Extra Modals ----------------------
-function openAddGroupModal() {
-  const formHtml = `
-    <form id="add-group-form" class="space-y-2">
-      <input type="text" id="new-group-name" placeholder="Group Name" class="w-full border p-2 rounded" required>
-      <input type="text" id="new-leader-name" placeholder="Leader Name" class="w-full border p-2 rounded" required>
-      <input type="tel" id="new-leader-phone" placeholder="Leader Phone" class="w-full border p-2 rounded" required>
-    </form>`;
-  
-  showModal("Add Group", formHtml, async () => {
-    const name = document.getElementById("new-group-name")?.value.trim();
-    const leader_name = document.getElementById("new-leader-name")?.value.trim();
-    const lead_phone = document.getElementById("new-leader-phone")?.value.trim();
-    if (!name || !leader_name || !lead_phone) return toast("Fill all fields");
-
-    try {
-      const { error } = await supabase.from("groups").insert([{ name, leader_name, lead_phone }]);
-      if (error) throw error;
-      toast("Group added");
-      await loadGroups();
-      await loadCountsAndTotals();
-    } catch (err) {
-      console.error("add group error:", err);
-      toast("Failed to add group");
-    }
-  });
-}
-
-
-function openAddMemberModalForGroup(groupId, groupName) {
-  const formHtml = `
-    <form id="add-member-form" class="space-y-2">
-      <input type="text" id="new-member-name" placeholder="Member Name" class="w-full border p-2 rounded" required>
-      <input type="tel" id="new-member-phone" placeholder="Member Phone" class="w-full border p-2 rounded" required>
-    </form>`;
-  
-  showModal(`Add Member to ${groupName}`, formHtml, async () => {
-    const name = document.getElementById("new-member-name")?.value.trim();
-    const phone = document.getElementById("new-member-phone")?.value.trim();
-    if (!name || !phone) return toast("Fill all fields");
-
-    try {
-      const { error } = await supabase.from("members").insert([{ name, phone, group_id: groupId }]);
-      if (error) throw error;
-      toast("Member added");
-      await loadGroups();
-      await loadCountsAndTotals();
-    } catch (err) {
-      console.error("add member error:", err);
-      toast("Failed to add member");
-    }
-  });
-}
-
-
-async function showMembersModal(groupId, groupName) {
-  try {
-    const { data, error } = await supabase.from("members").select("id, name").eq("group_id", groupId).order("name");
-    if (error) throw error;
-    const content = (data || []).map(m => `<div class="flex justify-between items-center"><span>${escapeHtml(m.name)}</span><button data-member-id="${m.id}" class="text-xs text-red-500 delete-member-btn">Delete</button></div>`).join("") || "<div>No members</div>";
-    showModal(`Members of ${groupName}`, content);
-  } catch (err) {
-    console.error("showMembersModal error:", err);
-    toast("Failed to load members");
-  }
-}
-
-function openAddEventModal() {
-  const formHtml = `
-    <form id="add-event-form" class="space-y-2">
-      <input type="text" id="new-event-title" placeholder="Event Title" class="w-full border p-2 rounded" required>
-      <textarea id="new-event-description" placeholder="Event Description" class="w-full border p-2 rounded" required></textarea>
-      <input type="date" id="new-event-date" class="w-full border p-2 rounded" required>
-      <input type="time" id="new-event-time" class="w-full border p-2 rounded" required>
-    </form>`;
-  
-  showModal("Add Event", formHtml, async () => {
-    const title = document.getElementById("new-event-title")?.value.trim();
-    const description = document.getElementById("new-event-description")?.value.trim();
-    const date = document.getElementById("new-event-date")?.value;
-    const time = document.getElementById("new-event-time")?.value;
-    if (!title || !description || !date || !time) return toast("Fill all fields");
-
-    try {
-      const { error } = await supabase.from("events").insert([{ title, description, date, time }]);
-      if (error) throw error;
-      toast("Event added");
-      await loadEvents(6);
-      await loadCountsAndTotals();
-    } catch (err) {
-      console.error("add event error:", err);
-      toast("Failed to add event");
-    }
-  });
-}
-
-
-function openAddAnnouncementModal() {
-  const formHtml = `
-    <form id="add-announcement-form" class="space-y-2">
-      <input type="text" id="new-announcement-title" placeholder="Title" class="w-full border p-2 rounded" required>
-      <textarea id="new-announcement-message" placeholder="Message" class="w-full border p-2 rounded" required></textarea>
-    </form>`;
-  showModal("Add Announcement", formHtml, async () => {
-    const title = document.getElementById("new-announcement-title")?.value.trim();
-    const message = document.getElementById("new-announcement-message")?.value.trim();
-    if (!title || !message) return toast("Fill all fields");
-    try {
-      const { error } = await supabase.from("announcements").insert([{ title, message }]);
-      if (error) throw error;
-      toast("Announcement added");
-      await loadAnnouncements(10);
-    } catch (err) {
-      console.error("add announcement error:", err);
-      toast("Failed to add announcement");
-    }
-  });
-}
-
-navigator.serviceWorker.addEventListener("message", (event) => {
-  if (event.data?.type === "PLAY_NOTIFICATION_SOUND") {
-    const audio = new Audio("/sounds/notification.mp3");
-    audio.play().catch(err => console.warn("sound play error:", err));
-  }
+  const groupSelect = document.getElementById("contribution-group");
+  if (groupSelect) groupSelect.addEventListener("change", e => loadMembersForGroup(e.target.value));
 });
