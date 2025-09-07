@@ -1,106 +1,93 @@
-const CACHE_NAME = "mckmen-cache-v6"; // bump this every deploy
-const urlsToCache = [
-  "./",
-  "./index.html",
-  "./manifest.json",
-  "./icons/icon-192.png",
-  "./icons/icon-512.png",
+// service-worker.js
+// Caches app shell but explicitly SKIPS supabase requests to avoid caching API calls
+const CACHE_NAME = "community-app-shell-v1";
+const ASSETS_TO_CACHE = [
+  "/",
+  "/index.html",
+  "/css/style.css",
+  "/app.js",
+  "/icons/icon-192.png",
+  "/icons/icon-512.png"
 ];
 
-// -----------------------------
-// Install and Cache Files
-// -----------------------------
+// Install: cache app shell
 self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache))
-  );
   self.skipWaiting();
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS_TO_CACHE).catch(() => {}))
+  );
 });
 
-// -----------------------------
-// Activate and Cleanup Old Cache
-// -----------------------------
+// Activate: cleanup old caches
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) =>
-      Promise.all(
-        cacheNames
-          .filter((name) => name !== CACHE_NAME)
-          .map((name) => caches.delete(name))
-      )
-    )
+    caches.keys().then(names => Promise.all(
+      names.map(n => (n !== CACHE_NAME ? caches.delete(n) : Promise.resolve()))
+    ))
   );
   self.clients.claim();
 });
 
-// -----------------------------
-// Fetch with Cache Fallback
-// -----------------------------
+// Fetch: handle caching for app shell, but NEVER cache requests to supabase.co
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
 
-  // 👉 Skip Supabase API requests
+  // Skip anything to do with Supabase API (do not cache or intercept)
   if (url.hostname.includes("supabase.co")) {
+    // Always do a direct network request for Supabase calls (so they get fresh data)
+    event.respondWith(fetch(event.request).catch(() => new Response(null, { status: 503 })));
     return;
   }
 
+  // For navigation or app shell: network-first, fallback to cache
+  if (event.request.mode === "navigate" || event.request.destination === "document") {
+    event.respondWith(
+      fetch(event.request)
+        .then(res => {
+          const copy = res.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+          return res;
+        })
+        .catch(() => caches.match("/index.html"))
+    );
+    return;
+  }
+
+  // For other assets: cache-first
   event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        const resClone = response.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, resClone);
-        });
-        return response;
-      })
-      .catch(() => caches.match(event.request))
+    caches.match(event.request).then(cached => cached || fetch(event.request).then(res => {
+      // stash in cache for next time (only for same-origin static assets)
+      if (event.request.url.startsWith(self.location.origin)) {
+        const copy = res.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+      }
+      return res;
+    }).catch(() => cached))
   );
 });
 
-// -----------------------------
-// Listen for SKIP_WAITING Message
-// -----------------------------
-self.addEventListener("message", (event) => {
-  if (event.data && event.data.type === "SKIP_WAITING") {
-    self.skipWaiting();
-  }
-});
-
-// -----------------------------
-// Push Notifications
-// -----------------------------
+// Listen for push events (if you later integrate push subscription/notifications)
 self.addEventListener("push", (event) => {
-  let data = {};
+  let data = { title: "Notification", message: "You have an update" };
   if (event.data) {
-    try {
-      data = event.data.json();
-    } catch {
-      data = { title: "New Notification", message: event.data.text() };
-    }
+    try { data = event.data.json(); } catch { data.message = event.data.text(); }
   }
-
-  const title = data.title || "📢 Update Available";
+  const title = data.title || "Notification";
   const options = {
-    body: data.message || "You have a new update",
+    body: data.message || "",
     icon: "/icons/icon-192.png",
     badge: "/icons/icon-192.png",
+    tag: "announcement"
   };
-
   event.waitUntil(self.registration.showNotification(title, options));
 });
 
-// -----------------------------
-// Handle Notification Click
-// -----------------------------
-self.addEventListener("notificationclick", (event) => {
+self.addEventListener("notificationclick", function(event) {
   event.notification.close();
-
   event.waitUntil(
-    clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
-      if (clientList.length > 0) {
-        return clientList[0].focus();
-      }
-      return clients.openWindow("./");
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then(clientList => {
+      if (clientList.length > 0) return clientList[0].focus();
+      return clients.openWindow("/");
     })
   );
 });

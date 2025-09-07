@@ -1,235 +1,332 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Men’s Fellowship Management System</title>
-  <link href="css/style.css" rel="stylesheet">
-  <link rel="manifest" href="./manifest.json">
-  <meta name="theme-color" content="#007bff">
-
-  <style>
-    #installBtn {
-      display: none;
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      padding: 12px 18px;
-      background: #007bff;
-      color: white;
-      border: none;
-      border-radius: 12px;
-      cursor: pointer;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-      font-size: 16px;
-      z-index: 1000;
-    }
-    #installBtn:hover {
-      background: #0056b3;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Community Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="/app.js" type="module"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js');
+            });
+        }
+    </script>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-light: #6366f1;
+            --secondary: #10b981;
+            --dark: #1e293b;
+            --light: #f8fafc;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9;
+        }
+        .card {
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        .toast {
+            animation: slideIn 0.5s, fadeOut 0.5s 2.5s;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+    </style>
 </head>
-<body>
-  <div class="header">
-    <h1>⛪ Men’s Fellowship Management System</h1>
-  </div>
+<body class="min-h-screen">
+    <div class="flex flex-col md:flex-row min-h-screen">
+        <!-- Sidebar -->
+        <aside class="w-full md:w-64 bg-white shadow-md">
+            <div class="p-4 border-b">
+                <h1 class="text-xl font-bold text-indigo-600">Community Manager</h1>
+            </div>
+            <nav class="p-4">
+                <ul class="space-y-2">
+                    <li>
+                        <a href="#" data-tab="dashboard" class="flex items-center p-2 rounded-lg text-indigo-600 bg-indigo-50">
+                            <i data-feather="home" class="w-5 h-5 mr-3"></i>
+                            Dashboard
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" data-tab="groups" class="flex items-center p-2 rounded-lg text-gray-600 hover:bg-gray-100">
+                            <i data-feather="users" class="w-5 h-5 mr-3"></i>
+                            Groups
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" data-tab="attendance" class="flex items-center p-2 rounded-lg text-gray-600 hover:bg-gray-100">
+                            <i data-feather="check-square" class="w-5 h-5 mr-3"></i>
+                            Attendance
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" data-tab="events" class="flex items-center p-2 rounded-lg text-gray-600 hover:bg-gray-100">
+                            <i data-feather="calendar" class="w-5 h-5 mr-3"></i>
+                            Events
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" data-tab="announcements" class="flex items-center p-2 rounded-lg text-gray-600 hover:bg-gray-100">
+                            <i data-feather="megaphone" class="w-5 h-5 mr-3"></i>
+                            Announcements
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" data-tab="contributions" class="flex items-center p-2 rounded-lg text-gray-600 hover:bg-gray-100">
+                            <i data-feather="dollar-sign" class="w-5 h-5 mr-3"></i>
+                            Contributions
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
 
-  <!-- NAVIGATION -->
-  <div class="nav-tabs">
-    <button class="nav-tab active" onclick="showTab('dashboard')">📊 Dashboard</button>
-    <button class="nav-tab" onclick="showTab('groups')">👥 Groups</button>
-    <button class="nav-tab" onclick="showTab('attendance')">📋 Attendance</button>
-    <button class="nav-tab" onclick="showTab('announcements')">📢 Announcements</button>
-    <button class="nav-tab" onclick="showTab('events')">📅 Events</button>
-    <button class="nav-tab" onclick="showTab('contributions')">💰 Contributions</button>
-    <button class="nav-tab" onclick="showTab('birthdays')">🎂 Birthdays</button>
-  </div>
+        <!-- Main Content -->
+        <main class="flex-1 p-6">
+            <!-- Header -->
+            <header class="flex justify-between items-center mb-8">
+                <h2 id="page-title" class="text-2xl font-bold text-gray-800">Dashboard</h2>
+                <div class="flex items-center space-x-4">
+                    <button id="notification-btn" class="relative p-2 rounded-full hover:bg-gray-200">
+                        <i data-feather="bell" class="w-5 h-5"></i>
+                        <span id="notification-count" class="hidden absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">0</span>
+                    </button>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
+                            <i data-feather="user" class="w-4 h-4 text-indigo-600"></i>
+                        </div>
+                        <span class="text-sm font-medium">Admin</span>
+                    </div>
+                </div>
+            </header>
 
-  <!-- Dashboard Tab -->
-  <div id="dashboard" class="tab-content active">
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-number" id="totalGroups">0</div>
-        <div class="stat-label">Total Groups</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number" id="totalMembers">0</div>
-        <div class="stat-label">Total Members</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number" id="totalContributions">0</div>
-        <div class="stat-label">Total Contributions (KSH)</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number" id="upcomingEvents">0</div>
-        <div class="stat-label">Upcoming Events</div>
-      </div>
+            <!-- Tab Content -->
+            <div id="tab-content">
+                <!-- Dashboard Content -->
+                <div id="dashboard-content" class="tab-pane active">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <div class="card bg-white p-6 rounded-lg shadow-sm">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-500">Total Groups</p>
+                                    <h3 id="total-groups" class="text-2xl font-bold">0</h3>
+                                </div>
+                                <div class="p-3 rounded-full bg-indigo-100 text-indigo-600">
+                                    <i data-feather="users" class="w-6 h-6"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card bg-white p-6 rounded-lg shadow-sm">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-500">Total Members</p>
+                                    <h3 id="total-members" class="text-2xl font-bold">0</h3>
+                                </div>
+                                <div class="p-3 rounded-full bg-green-100 text-green-600">
+                                    <i data-feather="user" class="w-6 h-6"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card bg-white p-6 rounded-lg shadow-sm">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-500">Total Contributions</p>
+                                    <h3 id="total-contributions" class="text-2xl font-bold">$0</h3>
+                                </div>
+                                <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+                                    <i data-feather="dollar-sign" class="w-6 h-6"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card bg-white p-6 rounded-lg shadow-sm">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-500">Upcoming Events</p>
+                                    <h3 id="upcoming-events" class="text-2xl font-bold">0</h3>
+                                </div>
+                                <div class="p-3 rounded-full bg-purple-100 text-purple-600">
+                                    <i data-feather="calendar" class="w-6 h-6"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="card bg-white p-6 rounded-lg shadow-sm">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="font-medium">Recent Events</h3>
+                                <a href="#" data-tab="events" class="text-sm text-indigo-600 hover:underline">View All</a>
+                            </div>
+                            <div id="recent-events" class="space-y-4">
+                                <!-- Events will be loaded here -->
+                            </div>
+                        </div>
+                        <div class="card bg-white p-6 rounded-lg shadow-sm">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="font-medium">Recent Contributions</h3>
+                                <a href="#" data-tab="contributions" class="text-sm text-indigo-600 hover:underline">View All</a>
+                            </div>
+                            <div id="recent-contributions" class="space-y-4">
+                                <!-- Contributions will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Groups Content -->
+                <div id="groups-content" class="tab-pane hidden">
+                    <div class="card bg-white p-6 rounded-lg shadow-sm">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-lg font-medium">All Groups</h3>
+                            <button id="add-group-btn" class="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+                                <i data-feather="plus" class="w-4 h-4 mr-2"></i>
+                                Add Group
+                            </button>
+                        </div>
+                        <div id="groups-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <!-- Groups will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Attendance Content -->
+                <div id="attendance-content" class="tab-pane hidden">
+                    <div class="card bg-white p-6 rounded-lg shadow-sm">
+                        <h3 class="text-lg font-medium mb-6">Attendance Records</h3>
+                        <div id="attendance-list">
+                            <!-- Attendance records will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Events Content -->
+                <div id="events-content" class="tab-pane hidden">
+                    <div class="card bg-white p-6 rounded-lg shadow-sm">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-lg font-medium">Events</h3>
+                            <button id="add-event-btn" class="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+                                <i data-feather="plus" class="w-4 h-4 mr-2"></i>
+                                Add Event
+                            </button>
+                        </div>
+                        <div id="events-list" class="space-y-4">
+                            <!-- Events will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Announcements Content -->
+                <div id="announcements-content" class="tab-pane hidden">
+                    <div class="card bg-white p-6 rounded-lg shadow-sm">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-lg font-medium">Announcements</h3>
+                            <button id="add-announcement-btn" class="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+                                <i data-feather="plus" class="w-4 h-4 mr-2"></i>
+                                New Announcement
+                            </button>
+                        </div>
+                        <div id="announcements-list" class="space-y-4">
+                            <!-- Announcements will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contributions Content -->
+                <div id="contributions-content" class="tab-pane hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-2">
+                            <div class="card bg-white p-6 rounded-lg shadow-sm mb-6">
+                                <h3 class="text-lg font-medium mb-6">Recent Contributions</h3>
+                                <div id="all-contributions-list" class="space-y-4">
+                                    <!-- All contributions will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="card bg-white p-6 rounded-lg shadow-sm">
+                                <h3 class="text-lg font-medium mb-6">Record Contribution</h3>
+                                <form id="contribution-form" class="space-y-4">
+                                    <div>
+                                        <label for="contribution-group" class="block text-sm font-medium text-gray-700 mb-1">Group</label>
+                                        <select id="contribution-group" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                            <option value="">Select Group</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label for="contribution-member" class="block text-sm font-medium text-gray-700 mb-1">Member</label>
+                                        <select id="contribution-member" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" disabled>
+                                            <option value="">Select Member</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label for="contribution-amount" class="block text-sm font-medium text-gray-700 mb-1">Amount</label>
+                                        <input type="number" id="contribution-amount" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="0.00">
+                                    </div>
+                                    <div>
+                                        <label for="contribution-type" class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                                        <select id="contribution-type" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                            <option value="donation">Donation</option>
+                                            <option value="dues">Dues</option>
+                                            <option value="event">Event Fee</option>
+                                            <option value="other">Other</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label for="contribution-notes" class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                                        <textarea id="contribution-notes" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                                    </div>
+                                    <button type="submit" class="w-full py-2 px-4 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                        Save Contribution
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
-    <div class="dashboard-grid" id="dashboardGroups"></div>
-  </div>
 
-  <!-- Groups Tab -->
-  <div id="groups" class="tab-content">
-    <div class="section-header">
-      <h2 class="section-title">Church Groups</h2>
-      <button class="btn btn-primary" onclick="showAddGroupModal()">➕ Add Group</button>
-    </div>
-    <div id="groupsList" class="dashboard-grid"></div>
-    <div id="groupDetails" style="display: none;"></div>
-  </div>
+    <!-- Toast Notification -->
+    <div id="toast-container" class="fixed bottom-4 right-4 space-y-2 z-50"></div>
 
-  <!-- Attendance Tab -->
-  <div id="attendance" class="tab-content">
-    <div class="section-header">
-      <h2 class="section-title">Attendance Tracking</h2>
-      <button class="btn btn-primary" onclick="showAttendanceModal()">📝 Mark Attendance</button>
-    </div>
-    <div id="attendanceList" class="content-card"></div>
-  </div>
-
-  <!-- Announcements Tab -->
-  <div id="announcements" class="tab-content">
-    <div class="section-header">
-      <h2 class="section-title">Announcements</h2>
-      <button class="btn btn-primary" onclick="showAnnouncementModal()">📢 New Announcement</button>
-    </div>
-    <div id="announcementsList"></div>
-  </div>
-
-  <!-- Events Tab -->
-  <div id="events" class="tab-content">
-    <div class="section-header">
-      <h2 class="section-title">Events & Reminders</h2>
-      <button class="btn btn-primary" onclick="showEventModal()">📅 Add Event</button>
-    </div>
-    <div id="eventsList"></div>
-  </div>
-
-  <!-- Contributions Tab -->
-  <div id="contributions" class="tab-content">
-    <div class="section-header">
-      <h2 class="section-title">Contributions & Giving</h2>
-      <button class="btn btn-primary" onclick="showContributionModal()">💰 Record Contribution</button>
-    </div>
-    <div id="contributionsList" class="content-card"></div>
-  </div>
-
-  <!-- Contribution Modal -->
-  <div id="contributionModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 class="modal-title">Record Contribution</h3>
-        <button class="close-btn" onclick="closeModal('contributionModal')">&times;</button>
-      </div>
-
-      <form id="contributionForm">
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Group</label>
-            <select id="contributionGroup" class="form-select" required>
-              <option value="">Select group</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Member</label>
-            <select id="contributionMember" class="form-select" required>
-              <option value="">Select a group first</option>
-            </select>
-          </div>
+    <!-- Modal Container -->
+    <div id="modal-container" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <div class="flex justify-between items-center p-4 border-b">
+                <h3 id="modal-title" class="text-lg font-medium"></h3>
+                <button id="close-modal" class="text-gray-500 hover:text-gray-700">
+                    <i data-feather="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div id="modal-content" class="p-4">
+                <!-- Modal content will be loaded here -->
+            </div>
+            <div class="flex justify-end p-4 border-t space-x-2">
+                <button id="cancel-modal" class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
+                <button id="confirm-modal" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Confirm</button>
+            </div>
         </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Amount (KSH)</label>
-            <input type="number" id="contributionAmount" class="form-input" placeholder="1000" min="1" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Type</label>
-            <select id="contributionType" class="form-select" required>
-              <option value="">Select type</option>
-              <option value="tithe">Tithe</option>
-              <option value="offering">Offering</option>
-              <option value="pledge">Pledge</option>
-              <option value="donation">Donation</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Date</label>
-            <input type="date" id="contributionDate" class="form-input" required>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Notes (Optional)</label>
-          <textarea id="contributionNotes" class="form-textarea" placeholder="Additional notes..."></textarea>
-        </div>
-
-        <div class="form-actions">
-          <button type="button" class="btn btn-secondary" onclick="closeModal('contributionModal')">Cancel</button>
-          <button type="submit" class="btn btn-primary">Record Contribution</button>
-        </div>
-      </form>
     </div>
-  </div>
 
-  <!-- Notification -->
-  <div id="notification" class="notification"></div>
-  <button id="forceInstallBtn">Force Install (Test)</button>
-  <button id="installBtn">📲 Install App</button>
-
-  <!-- Supabase App Script -->
-  <script type="module" src="app.js"></script>
-
-  <!-- Service Worker -->
-  <script>
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker.register("./service-worker.js")
-          .then((reg) => console.log("Service Worker registered!", reg))
-          .catch((err) => console.log("SW registration failed:", err));
-      });
-    }
-  </script>
-
-  <!-- Install Prompt -->
-  <script>
-    let deferredPrompt;
-    const installBtn = document.getElementById("installBtn");
-    installBtn.style.display = "none";
-
-    window.addEventListener("beforeinstallprompt", (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      installBtn.style.display = "block";
-
-      installBtn.addEventListener("click", async () => {
-        installBtn.style.display = "none";
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        console.log(`User response: ${outcome}`);
-        deferredPrompt = null;
-      });
-    });
-
-    window.addEventListener("appinstalled", () => {
-      console.log("PWA installed");
-      installBtn.style.display = "none";
-    });
-
-    document.getElementById("forceInstallBtn").addEventListener("click", async () => {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        console.log(`User response: ${outcome}`);
-        deferredPrompt = null;
-      } else {
-        alert("Install prompt not ready yet. Interact with the page first.");
-      }
-    });
-  </script>
+    <script>
+        feather.replace();
+    </script>
 </body>
 </html>
