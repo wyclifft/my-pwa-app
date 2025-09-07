@@ -465,12 +465,18 @@ function openAddGroupModal() {
   const formHtml = `
     <form id="add-group-form" class="space-y-2">
       <input type="text" id="new-group-name" placeholder="Group Name" class="w-full border p-2 rounded" required>
+      <input type="text" id="new-leader-name" placeholder="Leader Name" class="w-full border p-2 rounded" required>
+      <input type="tel" id="new-leader-phone" placeholder="Leader Phone" class="w-full border p-2 rounded" required>
     </form>`;
+  
   showModal("Add Group", formHtml, async () => {
     const name = document.getElementById("new-group-name")?.value.trim();
-    if (!name) return toast("Group name required");
+    const leader_name = document.getElementById("new-leader-name")?.value.trim();
+    const lead_phone = document.getElementById("new-leader-phone")?.value.trim();
+    if (!name || !leader_name || !lead_phone) return toast("Fill all fields");
+
     try {
-      const { error } = await supabase.from("groups").insert([{ name }]);
+      const { error } = await supabase.from("groups").insert([{ name, leader_name, lead_phone }]);
       if (error) throw error;
       toast("Group added");
       await loadGroups();
@@ -482,16 +488,21 @@ function openAddGroupModal() {
   });
 }
 
+
 function openAddMemberModalForGroup(groupId, groupName) {
   const formHtml = `
     <form id="add-member-form" class="space-y-2">
       <input type="text" id="new-member-name" placeholder="Member Name" class="w-full border p-2 rounded" required>
+      <input type="tel" id="new-member-phone" placeholder="Member Phone" class="w-full border p-2 rounded" required>
     </form>`;
+  
   showModal(`Add Member to ${groupName}`, formHtml, async () => {
     const name = document.getElementById("new-member-name")?.value.trim();
-    if (!name) return toast("Member name required");
+    const phone = document.getElementById("new-member-phone")?.value.trim();
+    if (!name || !phone) return toast("Fill all fields");
+
     try {
-      const { error } = await supabase.from("members").insert([{ name, group_id: groupId }]);
+      const { error } = await supabase.from("members").insert([{ name, phone, group_id: groupId }]);
       if (error) throw error;
       toast("Member added");
       await loadGroups();
@@ -502,6 +513,7 @@ function openAddMemberModalForGroup(groupId, groupName) {
     }
   });
 }
+
 
 async function showMembersModal(groupId, groupName) {
   try {
@@ -519,14 +531,20 @@ function openAddEventModal() {
   const formHtml = `
     <form id="add-event-form" class="space-y-2">
       <input type="text" id="new-event-title" placeholder="Event Title" class="w-full border p-2 rounded" required>
+      <textarea id="new-event-description" placeholder="Event Description" class="w-full border p-2 rounded" required></textarea>
       <input type="date" id="new-event-date" class="w-full border p-2 rounded" required>
+      <input type="time" id="new-event-time" class="w-full border p-2 rounded" required>
     </form>`;
+  
   showModal("Add Event", formHtml, async () => {
     const title = document.getElementById("new-event-title")?.value.trim();
+    const description = document.getElementById("new-event-description")?.value.trim();
     const date = document.getElementById("new-event-date")?.value;
-    if (!title || !date) return toast("Fill all fields");
+    const time = document.getElementById("new-event-time")?.value;
+    if (!title || !description || !date || !time) return toast("Fill all fields");
+
     try {
-      const { error } = await supabase.from("events").insert([{ title, date }]);
+      const { error } = await supabase.from("events").insert([{ title, description, date, time }]);
       if (error) throw error;
       toast("Event added");
       await loadEvents(6);
@@ -537,6 +555,7 @@ function openAddEventModal() {
     }
   });
 }
+
 
 function openAddAnnouncementModal() {
   const formHtml = `
