@@ -12,19 +12,16 @@ window.showTab = function(tabName, event) {
   if (event) event.currentTarget.classList.add("active");
 };
 
-["Group","Member","Attendance","Event","Announcement","Contribution","Birthday"].forEach(type => {
-  window[`showAdd${type}Modal`] = () => document.getElementById(`add${type}Modal`)?.classList.add("show");
-});
 window.closeModal = (id) => document.getElementById(id)?.classList.remove("show");
 
 // ---------------- Dashboard Stats ----------------
 async function loadDashboardStats() {
   const safeSet = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val ?? 0; };
 
-  const { count: groupsCount } = await supabase.from("groups").select("*",{ count:"exact", head:true });
-  const { count: membersCount } = await supabase.from("members").select("*",{ count:"exact", head:true });
+  const { count: groupsCount } = await supabase.from("groups").select("*", { count: "exact", head: true });
+  const { count: membersCount } = await supabase.from("members").select("*", { count: "exact", head: true });
   const today = new Date().toISOString().split("T")[0];
-  const { count: eventsCount } = await supabase.from("events").select("*",{ count:"exact", head:true }).gte("date", today);
+  const { count: eventsCount } = await supabase.from("events").select("*", { count: "exact", head: true }).gte("date", today);
   const { data: contributions } = await supabase.from("contributions").select("amount");
   const totalContributions = contributions?.reduce((sum, c) => sum + Number(c.amount), 0) || 0;
 
@@ -69,7 +66,7 @@ async function loadGroups() {
   const gSelects = [document.getElementById("memberGroup"), document.getElementById("attendanceGroup"), document.getElementById("contributionGroup")];
   gSelects.forEach(sel => {
     if (sel) {
-      sel.innerHTML = "";
+      sel.innerHTML = `<option value="">Select group</option>`;
       groups.forEach(g => {
         const opt = document.createElement("option");
         opt.value = g.id; opt.textContent = g.name; sel.appendChild(opt);
@@ -110,31 +107,20 @@ window.deleteGroup = async(id)=>{ if(confirm("Delete group?")) await supabase.fr
 window.deleteMember = async(id)=>{ if(confirm("Delete member?")) await supabase.from("members").delete().eq("id",id); };
 window.deleteEvent = async(id)=>{ if(confirm("Delete event?")) await supabase.from("events").delete().eq("id",id); };
 
-// ---------------- Form Submissions ----------------
-document.getElementById("addGroupForm")?.addEventListener("submit", async e=>{
-  e.preventDefault();
-  const name=document.getElementById("groupName").value, leader_name=document.getElementById("leaderName").value, leader_phone=document.getElementById("leaderPhone").value;
-  if(!name||!leader_name||!leader_phone) return alert("All fields required");
-  const {error}=await supabase.from("groups").insert([{name,leader_name,leader_phone}]);
-  if(error) return alert(error.message);
-  closeModal("addGroupModal");
-});
-
-document.getElementById("addMemberForm")?.addEventListener("submit", async e=>{
-  e.preventDefault();
-  const name=document.getElementById("memberName").value, phone=document.getElementById("memberPhone").value, birthday=document.getElementById("memberBirthday").value||null, group_id=document.getElementById("memberGroup").value;
-  if(!name||!phone||!group_id) return alert("All fields required");
-  const {error}=await supabase.from("members").insert([{name,phone,birthday,group_id}]);
-  if(error) return alert(error.message);
-  closeModal("addMemberModal");
-});
-
+// ---------------- Contribution Form ----------------
 document.getElementById("contributionForm")?.addEventListener("submit", async e=>{
   e.preventDefault();
-  const member_id=document.getElementById("contributionMember").value, amount=Number(document.getElementById("contributionAmount").value), type=document.getElementById("contributionType").value, date=document.getElementById("contributionDate").value, notes=document.getElementById("contributionNotes").value||"";
-  if(!member_id||!amount||!type||!date) return alert("All required");
-  const {error}=await supabase.from("contributions").insert([{member_id,amount,type,date,notes}]);
-  if(error) return alert(error.message);
+  const member_id=document.getElementById("contributionMember").value,
+        amount=Number(document.getElementById("contributionAmount").value),
+        type=document.getElementById("contributionType").value,
+        date=document.getElementById("contributionDate").value,
+        notes=document.getElementById("contributionNotes").value || "";
+
+  if(!member_id||!amount||!type||!date) return alert("All required fields must be filled");
+
+  const { error } = await supabase.from("contributions").insert([{ member_id, amount, type, date, notes }]);
+  if (error) return alert(error.message);
+
   closeModal("contributionModal");
 });
 
