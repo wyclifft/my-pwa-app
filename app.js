@@ -88,35 +88,106 @@ document.addEventListener("click", (e) => {
 
 async function loadGroups() {
   try {
-    const { data, error } = await supabase.from("groups").select("id, name").order("name");
-    if (error) throw error;
+    // fetch groups
+    const { data: groups, error: groupsErr } = await supabase.from("groups").select("id, name").order("name");
+    if (groupsErr) throw groupsErr;
+
+    // fetch members once
+    const { data: allMembers, error: membersErr } = await supabase.from("members").select("id, name, group_id").order("name");
+    if (membersErr) throw membersErr;
+
+    // group members by group_id
+    const membersByGroup = {};
+    (allMembers || []).forEach(m => {
+      if (!membersByGroup[m.group_id]) membersByGroup[m.group_id] = [];
+      membersByGroup[m.group_id].push(m);
+    });
+
     // populate groups list cards
     const groupsList = document.getElementById("groups-list");
     if (groupsList) {
       groupsList.innerHTML = "";
-      data.forEach(g => {
+      groups.forEach(g => {
+        const memberListHtml = (membersByGroup[g.id] || [])
+          .map(m => `<div class="flex justify-between items-center"><span class="text-sm">${escapeHtml(m.name)}</span><button data-member-id="${m.id}" data-group-id="${g.id}" class="delete-member-btn text-xs text-red-500">Delete</button></div>`)
+          .join("") || `<div class="text-sm text-gray-500">No members</div>`;
+
+        const memberCount = (membersByGroup[g.id] || []).length;
+
         const card = document.createElement("div");
         card.className = "p-4 border rounded-md";
-        card.innerHTML = `<h4 class="font-medium">${escapeHtml(g.name)}</h4>`;
+        card.dataset.groupId = g.id;
+        card.innerHTML = `
+          <div class="flex justify-between items-start mb-2">
+            <div>
+              <h4 class="font-medium">${escapeHtml(g.name)}</h4>
+              <div class="text-xs text-gray-500">${memberCount} member(s)</div>
+            </div>
+            <div class="space-x-2">
+              <button class="view-members-btn px-2 py-1 text-xs border rounded" data-group-id="${g.id}" data-group-name="${escapeHtml(g.name)}">View Members</button>
+              <button class="add-member-btn px-2 py-1 text-xs bg-indigo-600 text-white rounded" data-group-id="${g.id}" data-group-name="${escapeHtml(g.name)}">Add Member</button>
+            </div>
+          </div>
+          <div class="members-preview text-sm space-y-1">
+            ${memberListHtml}
+          </div>
+        `;
         groupsList.appendChild(card);
       });
+
+      // attach handlers
+      groupsList.querySelectorAll(".view-members-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const gid = btn.dataset.groupId;
+          const gname = btn.dataset.groupName;
+          showMembersModal(gid, gname);
+        });
+      });
+      groupsList.querySelectorAll(".add-member-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const gid = btn.dataset.groupId;
+          const gname = btn.dataset.groupName;
+          openAddMemberModalForGroup(gid, gname);
+        });
+      });
+      groupsList.querySelectorAll(".delete-member-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const memberId = btn.dataset.memberId;
+          if (!confirm("Delete member?")) return;
+          try {
+            const { error } = await supabase.from("members").delete().eq("id", memberId);
+            if (error) throw error;
+            toast("Member deleted");
+            await loadGroups();
+            await loadCountsAndTotals();
+            await loadRecentContributions(8);
+          } catch (err) {
+            console.error("delete member error:", err);
+            toast("Failed to delete member");
+          }
+        });
+      });
     }
+
     // contribution group select
     const groupSelect = document.getElementById("contribution-group");
     if (groupSelect) {
+      const prevValue = groupSelect.value || "";
       groupSelect.innerHTML = `<option value="">Select Group</option>`;
-      data.forEach(g => {
+      groups.forEach(g => {
         const opt = document.createElement("option");
         opt.value = g.id;
         opt.textContent = g.name;
         groupSelect.appendChild(opt);
       });
+      if (prevValue) groupSelect.value = prevValue;
     }
 
     // total groups
     const tg = document.getElementById("total-groups");
-    if (tg) tg.textContent = data.length ?? 0;
-    return data;
+    if (tg) tg.textContent = groups.length ?? 0;
+
+    return groups;
   } catch (err) {
     console.error("loadGroups error:", err);
     toast("Failed to load groups");
@@ -150,20 +221,17 @@ async function loadMembersForGroup(groupId) {
 
 async function loadCountsAndTotals() {
   try {
-    // total members
     const { count: membersCount, error: membersErr } = await supabase.from("members").select("*", { head: true, count: "exact" });
     if (membersErr) throw membersErr;
     const tm = document.getElementById("total-members");
     if (tm) tm.textContent = membersCount ?? 0;
 
-    // total contributions (sum)
     const { data: contribs, error: contribErr } = await supabase.from("contributions").select("amount");
     if (contribErr) throw contribErr;
     const total = (contribs || []).reduce((s, r) => s + parseFloat(r.amount || 0), 0);
     const tc = document.getElementById("total-contributions");
     if (tc) tc.textContent = Intl.NumberFormat().format(total);
 
-    // upcoming events count
     const today = new Date().toISOString().slice(0, 10);
     const { count: eventsCount, error: eventsErr } = await supabase.from("events").select("*", { head: true, count: "exact" }).gte("date", today);
     if (eventsErr) throw eventsErr;
@@ -181,7 +249,6 @@ function escapeHtml(s = "") {
 // ---------------------- Contributions ----------------------
 async function loadRecentContributions(limit = 8) {
   try {
-    // Nested select: contributions -> members -> groups
     const { data, error } = await supabase
       .from("contributions")
       .select(`
@@ -275,7 +342,6 @@ async function loadEvents(limit = 6) {
     if (error) throw error;
     const recentEvents = document.getElementById("recent-events");
     const eventsList = document.getElementById("events-list");
-    const eventsFull = document.getElementById("events-list") || document.getElementById("events-list"); // reuse spacing
     if (recentEvents) recentEvents.innerHTML = (data || []).map(e => `<div class="p-2 border rounded">${escapeHtml(e.title)} — ${escapeHtml(e.date)}</div>`).join("") || "<div class='text-sm text-gray-500'>No events</div>";
     if (eventsList) eventsList.innerHTML = (data || []).map(e => `<li>${escapeHtml(e.title)} — ${escapeHtml(e.date)}</li>`).join("");
   } catch (err) {
@@ -294,7 +360,7 @@ async function loadAnnouncements(limit = 10) {
   }
 }
 
-// ---------------------- Real-time Announcements & Notifications ----------------------
+// ---------------------- Real-time Announcements ----------------------
 async function requestNotificationPermission() {
   if (!("Notification" in window)) return false;
   if (Notification.permission === "granted") return true;
@@ -304,7 +370,6 @@ async function requestNotificationPermission() {
 }
 
 async function showPushNotification(title, body) {
-  // prefer ServiceWorker registration showNotification if available
   try {
     if (navigator.serviceWorker && navigator.serviceWorker.getRegistration) {
       const reg = await navigator.serviceWorker.getRegistration();
@@ -318,7 +383,6 @@ async function showPushNotification(title, body) {
         return;
       }
     }
-    // Fallback to Notification API
     new Notification(title, { body, icon: "/icons/icon-192.png" });
   } catch (err) {
     console.error("showPushNotification error:", err);
@@ -327,17 +391,15 @@ async function showPushNotification(title, body) {
 
 function subscribeRealtimeAnnouncements() {
   try {
-    const channel = supabase.channel("public:announcements")
+    supabase.channel("public:announcements")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "announcements" }, payload => {
         const rec = payload.new;
         const title = rec.title || "Announcement";
         const msg = rec.message || "";
         toast(`Announcement: ${title}`);
-        // show a push notification if permission
         if (Notification.permission === "granted") {
           showPushNotification(title, msg);
         }
-        // reload announcements list
         loadAnnouncements(10);
       })
       .subscribe();
@@ -348,7 +410,6 @@ function subscribeRealtimeAnnouncements() {
 
 // ---------------------- Init ----------------------
 document.addEventListener("DOMContentLoaded", async () => {
-  // wire contribution group -> members
   const groupSelect = document.getElementById("contribution-group");
   const memberSelect = document.getElementById("contribution-member");
   if (groupSelect) {
@@ -365,38 +426,136 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // contribution form
   const contribForm = document.getElementById("contribution-form");
   if (contribForm) contribForm.addEventListener("submit", handleContributionFormSubmit);
 
-  // modal buttons already wired in HTML; we expose showModal if needed
   window.showModal = showModal;
 
-  // load initial data
   await loadGroups();
   await loadCountsAndTotals();
   await loadRecentContributions(8);
   await loadEvents(6);
   await loadAnnouncements(10);
 
-  // request notification permission for push (user gesture usually better)
   try {
     await requestNotificationPermission();
   } catch (err) {
     console.warn("Notification permission error:", err);
   }
 
-  // subscribe to realtime announcements
   try {
     subscribeRealtimeAnnouncements();
   } catch (err) {
     console.warn("Realtime subscribe failed:", err);
   }
 
-  // enable small UI niceties (close modal confirm wired)
   document.getElementById("close-modal")?.addEventListener("click", () => document.getElementById("modal-container")?.classList.add("hidden"));
   document.getElementById("cancel-modal")?.addEventListener("click", () => document.getElementById("modal-container")?.classList.add("hidden"));
 
-  // initial active tab
   activateTab("dashboard");
+
+  // Bind extra add buttons if they exist
+  document.getElementById("add-group-btn")?.addEventListener("click", openAddGroupModal);
+  document.getElementById("add-event-btn")?.addEventListener("click", openAddEventModal);
+  document.getElementById("add-announcement-btn")?.addEventListener("click", openAddAnnouncementModal);
 });
+
+// ---------------------- Extra Modals ----------------------
+function openAddGroupModal() {
+  const formHtml = `
+    <form id="add-group-form" class="space-y-2">
+      <input type="text" id="new-group-name" placeholder="Group Name" class="w-full border p-2 rounded" required>
+    </form>`;
+  showModal("Add Group", formHtml, async () => {
+    const name = document.getElementById("new-group-name")?.value.trim();
+    if (!name) return toast("Group name required");
+    try {
+      const { error } = await supabase.from("groups").insert([{ name }]);
+      if (error) throw error;
+      toast("Group added");
+      await loadGroups();
+      await loadCountsAndTotals();
+    } catch (err) {
+      console.error("add group error:", err);
+      toast("Failed to add group");
+    }
+  });
+}
+
+function openAddMemberModalForGroup(groupId, groupName) {
+  const formHtml = `
+    <form id="add-member-form" class="space-y-2">
+      <input type="text" id="new-member-name" placeholder="Member Name" class="w-full border p-2 rounded" required>
+    </form>`;
+  showModal(`Add Member to ${groupName}`, formHtml, async () => {
+    const name = document.getElementById("new-member-name")?.value.trim();
+    if (!name) return toast("Member name required");
+    try {
+      const { error } = await supabase.from("members").insert([{ name, group_id: groupId }]);
+      if (error) throw error;
+      toast("Member added");
+      await loadGroups();
+      await loadCountsAndTotals();
+    } catch (err) {
+      console.error("add member error:", err);
+      toast("Failed to add member");
+    }
+  });
+}
+
+async function showMembersModal(groupId, groupName) {
+  try {
+    const { data, error } = await supabase.from("members").select("id, name").eq("group_id", groupId).order("name");
+    if (error) throw error;
+    const content = (data || []).map(m => `<div class="flex justify-between items-center"><span>${escapeHtml(m.name)}</span><button data-member-id="${m.id}" class="text-xs text-red-500 delete-member-btn">Delete</button></div>`).join("") || "<div>No members</div>";
+    showModal(`Members of ${groupName}`, content);
+  } catch (err) {
+    console.error("showMembersModal error:", err);
+    toast("Failed to load members");
+  }
+}
+
+function openAddEventModal() {
+  const formHtml = `
+    <form id="add-event-form" class="space-y-2">
+      <input type="text" id="new-event-title" placeholder="Event Title" class="w-full border p-2 rounded" required>
+      <input type="date" id="new-event-date" class="w-full border p-2 rounded" required>
+    </form>`;
+  showModal("Add Event", formHtml, async () => {
+    const title = document.getElementById("new-event-title")?.value.trim();
+    const date = document.getElementById("new-event-date")?.value;
+    if (!title || !date) return toast("Fill all fields");
+    try {
+      const { error } = await supabase.from("events").insert([{ title, date }]);
+      if (error) throw error;
+      toast("Event added");
+      await loadEvents(6);
+      await loadCountsAndTotals();
+    } catch (err) {
+      console.error("add event error:", err);
+      toast("Failed to add event");
+    }
+  });
+}
+
+function openAddAnnouncementModal() {
+  const formHtml = `
+    <form id="add-announcement-form" class="space-y-2">
+      <input type="text" id="new-announcement-title" placeholder="Title" class="w-full border p-2 rounded" required>
+      <textarea id="new-announcement-message" placeholder="Message" class="w-full border p-2 rounded" required></textarea>
+    </form>`;
+  showModal("Add Announcement", formHtml, async () => {
+    const title = document.getElementById("new-announcement-title")?.value.trim();
+    const message = document.getElementById("new-announcement-message")?.value.trim();
+    if (!title || !message) return toast("Fill all fields");
+    try {
+      const { error } = await supabase.from("announcements").insert([{ title, message }]);
+      if (error) throw error;
+      toast("Announcement added");
+      await loadAnnouncements(10);
+    } catch (err) {
+      console.error("add announcement error:", err);
+      toast("Failed to add announcement");
+    }
+  });
+}
