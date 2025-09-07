@@ -1,112 +1,135 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-// Supabase credentials
-const SUPABASE_URL = "https://wyocoumpglwroyzbrvsb.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind5b2NvdW1wZ2x3cm95emJydnNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY2NTE0ODgsImV4cCI6MjA3MjIyNzQ4OH0.ghId1cDHHfyR9C_VmSCGxcE-aqW7kfbbJQ_F7aWan70"; 
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// ==============================
+// Supabase client setup
+// ==============================
+const SUPABASE_URL = "https://zlslqpsnstvmfjnrqeeew.supabase.co"; // replace if wrong
+const SUPABASE_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpsc2xxcHNuc3R2bWZqbnJxZWV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM4OTAyMTMsImV4cCI6MjA2OTQ2NjIxM30.oK2aiMsHOKS50TVFHppAudWqikQkJN8nizXFcnT340w"; // replace with your anon key
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// ---------- UI Helpers ----------
-function showNotification(message, type = "success") {
-  const notification = document.getElementById("notification");
-  notification.textContent = message;
-  notification.className = `notification show ${type}`;
-  setTimeout(() => {
-    notification.className = "notification";
-  }, 3000);
-}
-
+// ==============================
+// Tab switching
+// ==============================
 function showTab(tabId) {
   document.querySelectorAll(".tab-content").forEach((tab) => {
-    tab.classList.remove("active");
+    tab.classList.add("hidden");
   });
-  document.querySelectorAll(".nav-tab").forEach((btn) => {
-    btn.classList.remove("active");
-  });
-  document.getElementById(tabId).classList.add("active");
-  document
-    .querySelector(`.nav-tab[onclick="showTab('${tabId}')"]`)
-    .classList.add("active");
+  document.getElementById(tabId).classList.remove("hidden");
 }
 
+// ==============================
+// Modal handling
+// ==============================
 function showContributionModal() {
-  document.getElementById("contributionModal").style.display = "block";
+  document.getElementById("contributionModal").classList.remove("hidden");
+}
+function closeModal() {
+  document.getElementById("contributionModal").classList.add("hidden");
 }
 
-function closeModal(id) {
-  document.getElementById(id).style.display = "none";
-}
-
-// ---------- Load Groups & Members ----------
+// ==============================
+// Load groups
+// ==============================
 async function loadGroups() {
+  const groupSelect = document.getElementById("groupSelect");
+  groupSelect.innerHTML = `<option value="">Loading...</option>`;
+
   const { data, error } = await supabase.from("groups").select("id, name");
-  const groupSelect = document.getElementById("contributionGroup");
 
   if (error) {
-    console.error(error);
-    showNotification("Failed to load groups", "error");
+    console.error("loadGroups error:", error);
+    groupSelect.innerHTML = `<option value="">Error loading groups</option>`;
     return;
   }
 
-  groupSelect.innerHTML = `<option value="">Select group</option>`;
-  data.forEach((group) => {
-    groupSelect.innerHTML += `<option value="${group.id}">${group.name}</option>`;
-  });
+  if (!data || data.length === 0) {
+    groupSelect.innerHTML = `<option value="">No groups found</option>`;
+    return;
+  }
+
+  groupSelect.innerHTML = data
+    .map((g) => `<option value="${g.id}">${g.name}</option>`)
+    .join("");
 }
 
-async function loadMembers(groupId) {
+// ==============================
+// Load contributions
+// ==============================
+async function loadContributions() {
+  const contributionsList = document.getElementById("contributionsList");
+  contributionsList.innerHTML = `<li class="p-2">Loading...</li>`;
+
   const { data, error } = await supabase
-    .from("members")
-    .select("id, name")
-    .eq("group_id", groupId);
-
-  const memberSelect = document.getElementById("contributionMember");
+    .from("contributions")
+    .select(
+      `
+      id,
+      amount,
+      type,
+      date,
+      notes,
+      members (
+        id, name,
+        groups (id, name)
+      )
+    `
+    )
+    .order("date", { ascending: false });
 
   if (error) {
-    console.error(error);
-    showNotification("Failed to load members", "error");
+    console.error("loadContributions error:", error);
+    contributionsList.innerHTML = `<li class="p-2 text-red-500">Error loading contributions</li>`;
     return;
   }
 
-  memberSelect.innerHTML = `<option value="">Select member</option>`;
-  data.forEach((member) => {
-    memberSelect.innerHTML += `<option value="${member.id}">${member.name}</option>`;
-  });
+  if (!data || data.length === 0) {
+    contributionsList.innerHTML = `<li class="p-2">No contributions yet</li>`;
+    return;
+  }
+
+  contributionsList.innerHTML = data
+    .map(
+      (c) => `
+      <li class="p-2 border-b">
+        <div class="font-semibold">${c.members?.name || "Unknown member"}</div>
+        <div>Group: ${c.members?.groups?.name || "No group"}</div>
+        <div>Amount: ${c.amount}</div>
+        <div>Type: ${c.type}</div>
+        <div>Date: ${c.date}</div>
+        ${
+          c.notes
+            ? `<div class="text-sm text-gray-600">Notes: ${c.notes}</div>`
+            : ""
+        }
+      </li>
+    `
+    )
+    .join("");
 }
 
-document
-  .getElementById("contributionGroup")
-  .addEventListener("change", (e) => {
-    const groupId = e.target.value;
-    if (groupId) {
-      loadMembers(groupId);
-    } else {
-      document.getElementById(
-        "contributionMember"
-      ).innerHTML = `<option value="">Select a group first</option>`;
-    }
-  });
-
-// ---------- Save Contribution ----------
+// ==============================
+// Contribution form submission
+// ==============================
 document
   .getElementById("contributionForm")
-  .addEventListener("submit", async (e) => {
+  ?.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const group_id = document.getElementById("contributionGroup").value;
-    const member_id = document.getElementById("contributionMember").value;
-    const amount = parseFloat(document.getElementById("contributionAmount").value);
-    const type = document.getElementById("contributionType").value;
-    const date = document.getElementById("contributionDate").value;
-    const notes = document.getElementById("contributionNotes").value || null;
+    const memberId = document.getElementById("memberSelect").value;
+    const amount = document.getElementById("amount").value;
+    const type = document.getElementById("type").value;
+    const date = document.getElementById("date").value;
+    const notes = document.getElementById("notes").value;
 
-    if (!group_id || !member_id || !amount || !type || !date) {
-      showNotification("Please fill all required fields", "error");
+    if (!memberId || !amount || !type || !date) {
+      alert("Please fill all required fields");
       return;
     }
 
     const { error } = await supabase.from("contributions").insert([
       {
-        member_id, // ✅ only member_id goes here
+        member_id: memberId,
         amount,
         type,
         date,
@@ -115,59 +138,27 @@ document
     ]);
 
     if (error) {
-      console.error(error);
-      showNotification("Error saving contribution", "error");
-    } else {
-      showNotification("Contribution recorded successfully 🎉");
-      document.getElementById("contributionForm").reset();
-      closeModal("contributionModal");
-      loadContributions();
+      console.error("Insert error:", error);
+      alert("Error saving contribution");
+      return;
     }
+
+    closeModal();
+    loadContributions();
   });
 
-// ---------- Load Contributions ----------
-async function loadContributions() {
-  const { data, error } = await supabase
-    .from("contributions")
-    .select(`
-      id, amount, type, date, notes,
-      members (
-        name,
-        groups (name)
-      )
-    `)
-    .order("date", { ascending: false });
+// ==============================
+// Expose functions for inline HTML
+// ==============================
+window.showTab = showTab;
+window.showContributionModal = showContributionModal;
+window.closeModal = closeModal;
 
-  const list = document.getElementById("contributionsList");
-
-  if (error) {
-    console.error(error);
-    list.innerHTML = `<p class="error">Failed to load contributions</p>`;
-    return;
-  }
-
-  if (!data || data.length === 0) {
-    list.innerHTML = `<p>No contributions recorded yet.</p>`;
-    return;
-  }
-
-  list.innerHTML = data
-    .map(
-      (c) => `
-    <div class="content-card">
-      <strong>${c.members?.name || "Unknown Member"}</strong> 
-      (${c.members?.groups?.name || "Unknown Group"}) <br>
-      💰 ${c.amount} KSH - ${c.type} <br>
-      📅 ${c.date} <br>
-      📝 ${c.notes || "No notes"}
-    </div>
-  `
-    )
-    .join("");
-}
-
-// ---------- Initialize ----------
+// ==============================
+// Init
+// ==============================
 document.addEventListener("DOMContentLoaded", () => {
+  console.log("App initialized!");
   loadGroups();
   loadContributions();
 });
